@@ -6,9 +6,193 @@
 
 body {
   background: #000;
+  color: #e8e4e0;
+  font-family: "Courier New", Courier, monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Canvas background */
+#orb-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* Content overlay */
+.content-overlay {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+}
+
+/* Header */
+.band-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+}
+
+.band-header h1 {
+  font-size: clamp(1.8rem, 5vw, 3.5rem);
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  text-transform: lowercase;
   color: #fff;
-  font-family: system-ui, sans-serif;
-  overflow: hidden;
-  width: 100vw;
-  height: 100vh;
+  text-shadow: 0 0 40px rgba(200, 80, 80, 0.3);
+}
+
+/* Grid layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 960px;
+  width: 100%;
+  padding-bottom: 4rem;
+}
+
+/* Panels */
+.panel {
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: background 0.3s ease;
+}
+
+.panel:hover {
+  background: rgba(20, 20, 20, 0.8);
+}
+
+.panel h2 {
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(200, 80, 80, 0.8);
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 0.5rem;
+}
+
+.panel p {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(232, 228, 224, 0.7);
+}
+
+/* Concert list */
+.concert-list {
+  list-style: none;
+}
+
+.concert-list li {
+  display: flex;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.concert-list li:last-child {
+  border-bottom: none;
+}
+
+.concert-list time {
+  color: rgba(200, 80, 80, 0.6);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.concert-list span {
+  color: rgba(232, 228, 224, 0.7);
+}
+
+/* Link list */
+.link-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.link-list a {
+  display: inline-block;
+  color: rgba(232, 228, 224, 0.6);
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.link-list a:hover {
+  color: #fff;
+  border-color: rgba(200, 80, 80, 0.5);
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  margin-top: 0.8rem;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: rgba(232, 228, 224, 0.8);
+  text-decoration: none;
+  border: 1px solid rgba(200, 80, 80, 0.4);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background: rgba(200, 80, 80, 0.15);
+  color: #fff;
+}
+
+/* Email link */
+.email {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: rgba(200, 80, 80, 0.7);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+}
+
+.email:hover {
+  color: rgba(200, 80, 80, 1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .content-overlay {
+    padding: 1.5rem 1rem;
+  }
+
+  .band-header {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

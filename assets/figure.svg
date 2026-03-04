@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="80" viewBox="0 0 60 80" fill="none" stroke="#e8e4e0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Head -->
+  <circle cx="30" cy="12" r="8"/>
+  <!-- Body -->
+  <path d="M30 20 Q32 40 30 58"/>
+  <!-- Left arm -->
+  <path d="M30 30 Q14 22 6 32"/>
+  <!-- Right arm -->
+  <path d="M30 30 Q46 38 54 28"/>
+  <!-- Left leg -->
+  <path d="M30 58 Q22 66 16 76"/>
+  <!-- Right leg -->
+  <path d="M30 58 Q38 64 42 74"/>
+</svg>

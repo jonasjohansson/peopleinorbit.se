@@ -3,10 +3,84 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>peopleinorb.it</title>
+    <title>people in orbit</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <script src="script.js"></script>
+    <canvas id="orb-canvas"></canvas>
+
+    <div class="content-overlay">
+      <header class="band-header">
+        <h1>people in orbit</h1>
+      </header>
+
+      <main class="grid">
+        <section class="panel" id="concerts">
+          <h2>Concerts</h2>
+          <ul class="concert-list">
+            <li>
+              <time>2026-04-12</time>
+              <span>Debaser Strand, Stockholm</span>
+            </li>
+            <li>
+              <time>2026-05-03</time>
+              <span>Pustervik, Gothenburg</span>
+            </li>
+            <li>
+              <time>2026-06-21</time>
+              <span>Midsommar Festival, Dalarna</span>
+            </li>
+            <li>
+              <time>2026-09-15</time>
+              <span>Babel, Malmö</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel" id="about">
+          <h2>About</h2>
+          <p>People in Orbit is a band from Stockholm, Sweden. We make music that floats — somewhere between ambient drift, art rock, and electronic pulse. Formed in 2023, we orbit around each other, finding new shapes in sound.</p>
+        </section>
+
+        <section class="panel" id="links">
+          <h2>Links</h2>
+          <ul class="link-list">
+            <li><a href="#">Spotify</a></li>
+            <li><a href="#">Bandcamp</a></li>
+            <li><a href="#">Instagram</a></li>
+            <li><a href="#">YouTube</a></li>
+            <li><a href="#">SoundCloud</a></li>
+          </ul>
+        </section>
+
+        <section class="panel" id="press">
+          <h2>Press Kit</h2>
+          <p>Download our electronic press kit including high-res photos, biography, and press clippings.</p>
+          <a href="#" class="btn">Download EPK</a>
+        </section>
+
+        <section class="panel" id="tech-rider">
+          <h2>Tech Rider</h2>
+          <p>Our technical requirements for live performances. Includes stage plot, input list, and equipment specs.</p>
+          <a href="#" class="btn">Download Tech Rider</a>
+        </section>
+
+        <section class="panel" id="contact">
+          <h2>Contact</h2>
+          <p>Booking &amp; general inquiries:</p>
+          <a href="mailto:hello@peopleinorb.it" class="email">hello@peopleinorb.it</a>
+        </section>
+      </main>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.171.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="script.js"></script>
   </body>
 </html>
