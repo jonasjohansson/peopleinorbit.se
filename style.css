@@ -12,25 +12,29 @@ body {
   font-family: system-ui, sans-serif;
 }
 
-/* Scene container */
+/* Scene container — scrollable with hidden scrollbar */
 .scene {
   position: relative;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
-/* Background image — covers viewport, cropped as needed */
+.scene::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* Background image — sized by JS to fill viewport, overflows for scrolling */
 .bg-image {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   z-index: 0;
   user-select: none;
   -webkit-user-drag: none;
+  /* width/height set by JS */
 }
 
 /* Dusk image — layered on top, fades in/out */
@@ -44,12 +48,13 @@ body {
   opacity: 1;
 }
 
-/* Post-processing canvas overlay */
+/* Post-processing canvas overlay — stays fixed to viewport */
 .fx-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 1;
   pointer-events: none;
 }
@@ -97,80 +102,12 @@ body {
   transition: transform 0.2s ease;
 }
 
-.hotspot:hover {
-  transform: scale(1.03);
-}
-
 .hotspot-icon {
-  opacity: 0;
-  font-size: 1.5rem;
-  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
-  transition: opacity 0.3s ease;
-  color: #fff;
-}
-
-.hotspot:hover .hotspot-icon {
-  opacity: 1;
+  display: none;
 }
 
 /* --- Hotspot styles (positions set by JS) --- */
 
-/* Turntable */
-.hotspot--turntable {
-}
-
-.hotspot--turntable::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 4px;
-  border: 2px solid transparent;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hotspot--turntable:hover::after {
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
-}
-
-.hotspot--turntable.playing::after {
-  border-color: rgba(255, 100, 100, 0.4);
-  box-shadow: inset 0 0 20px rgba(255, 100, 100, 0.1);
-}
-
-/* Blue vinyl record */
-.hotspot--vinyl {
-}
-
-.hotspot--vinyl::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 4px;
-  border: 2px solid transparent;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hotspot--vinyl:hover::after {
-  border-color: rgba(100, 100, 255, 0.5);
-  box-shadow: 0 0 20px rgba(100, 100, 255, 0.2);
-}
-
-/* TV — the LG monitor screen (positioned by JS) */
-.hotspot--tv {
-}
-
-.hotspot--tv::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 2px solid transparent;
-  transition: border-color 0.3s ease;
-}
-
-.hotspot--tv:hover::after {
-  border-color: rgba(255, 255, 255, 0.2);
-}
 
 /* TV screen — static/video fills the TV screen area (positioned by JS) */
 .tv-screen {
@@ -180,9 +117,211 @@ body {
   border-radius: 2px;
 }
 
+/* TV logo — default state */
+.tv-logo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+}
+
+.tv-logo img {
+  width: 70%;
+  max-height: 60%;
+  object-fit: contain;
+  opacity: 0.8;
+}
+
+/* Play button above TV */
+.hotspot--tv-play {
+  font-family: system-ui, sans-serif;
+  font-size: 1vw;
+  letter-spacing: 0.15em;
+}
+
+.hotspot--tv-play .hotspot-icon {
+  font-size: 1vw;
+}
+
+/* TV power LED — on the bezel below screen */
+.tv-led {
+  position: absolute;
+  top: 92.2%;
+  left: 28.7%;
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 50%;
+  background: transparent;
+  z-index: 5;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+  pointer-events: none;
+}
+
+.tv-led.on {
+  background: #33cc33;
+  box-shadow: 0 0 6px 2px rgba(51, 204, 51, 0.6);
+}
+
+/* Hifi LED — on the Vincent preamp */
+.hifi-led {
+  position: absolute;
+  top: 83.6%;
+  left: 57.5%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: transparent;
+  z-index: 5;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+  pointer-events: none;
+}
+
+.hifi-led.on {
+  background: #33cc33;
+  box-shadow: 0 0 6px 2px rgba(51, 204, 51, 0.6);
+}
+
+/* Transparent overlay — blocks YouTube controls, handles clicks */
+.tv-interact {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Custom TV timeline */
+.tv-timeline {
+  position: absolute;
+  bottom: 4%;
+  left: 5%;
+  right: 5%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  z-index: 4;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tv-screen:hover .tv-timeline {
+  opacity: 1;
+}
+
+.tv-timeline-progress {
+  height: 100%;
+  width: 0%;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+  transition: width 0.2s linear;
+}
+
+/* Volume indicator (right edge) */
+.tv-volume {
+  position: absolute;
+  right: 3%;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.tv-volume.visible {
+  opacity: 1;
+}
+
+.tv-volume-bar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  transition: height 0.15s ease;
+}
+
 .tv-static {
   position: absolute;
   inset: 0;
+}
+
+.tv-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  border: none;
+}
+
+.tv-video.active {
+  display: block;
+  opacity: 0.85;
+  mix-blend-mode: screen;
+}
+
+#ytPlayer {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: none;
+}
+
+#ytPlayer.active {
+  display: block;
+  opacity: 0.85;
+  mix-blend-mode: screen;
+}
+
+
+/* TV glare — diagonal light reflection */
+.tv-glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 25%,
+    transparent 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* TV vignette — dark edges like a real screen */
+.tv-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 40px 10px rgba(0, 0, 0, 0.4),
+              inset 0 0 80px 20px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* TV scanlines — subtle horizontal lines */
+.tv-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+  pointer-events: none;
+  z-index: 3;
 }
 
 .tv-static canvas {
@@ -193,19 +332,6 @@ body {
 /* Lamp */
 .hotspot--lamp {
   border-radius: 50%;
-}
-
-.hotspot--lamp::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  transition: border-color 0.3s ease;
-}
-
-.hotspot--lamp:hover::after {
-  border-color: rgba(255, 200, 100, 0.3);
 }
 
 /* Speakers */
@@ -240,10 +366,10 @@ body {
 /* Music notes floating up from turntable */
 .music-notes {
   position: absolute;
-  left: 46%;
-  top: 35%;
-  width: 15%;
-  height: 15%;
+  left: 48%;
+  top: 50%;
+  width: 18%;
+  height: 14%;
   pointer-events: none;
 }
 
@@ -274,6 +400,7 @@ body {
   }
 }
 
+
 /* Book easter egg */
 .hotspot--book {
   left: 12%;
@@ -303,51 +430,3 @@ body {
   opacity: 1;
 }
 
-/* Spotify floating player */
-.spotify-player {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 100;
-  background: #1a1a1a;
-  border-radius: 12px;
-  padding: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  display: none;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-.spotify-player.visible {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.spotify-player iframe {
-  border-radius: 8px;
-  display: block;
-}
-
-.spotify-close {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: none;
-  background: #333;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.spotify-close:hover {
-  background: #555;
-}

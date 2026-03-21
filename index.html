@@ -40,20 +40,30 @@
         <!-- Music notes container -->
         <div class="music-notes" id="musicNotes" aria-hidden="true"></div>
 
-        <!-- Blue Vinyl Record — purchase link -->
+        <!-- Blue Vinyl Record — pre-order link -->
         <a
-          href="https://aprilrecords.se"
+          href="https://peopleinorbit.bandcamp.com/album/viewpoint"
           target="_blank"
           rel="noopener"
           class="hotspot hotspot--vinyl"
           id="vinylBtn"
-          aria-label="Buy on April Records"
-          title="Buy on April Records"
+          aria-label="Pre-order Viewpoint"
+          title="Pre-order Viewpoint"
         >
           <span class="hotspot-icon">&#128179;</span>
         </a>
 
-        <!-- TV Screen — video player -->
+        <!-- Button above TV — plays video unmuted -->
+        <button
+          class="hotspot hotspot--tv-play"
+          id="tvPlayBtn"
+          aria-label="Watch video"
+          title="Watch video"
+        >
+          <span class="hotspot-icon">&#9654; WATCH</span>
+        </button>
+
+        <!-- TV Screen — click to return to logo -->
         <button
           class="hotspot hotspot--tv"
           id="tvBtn"
@@ -65,9 +75,37 @@
 
         <!-- TV video container -->
         <div class="tv-screen" id="tvScreen">
-          <div class="tv-static" id="tvStatic">
+          <!-- Default: logo -->
+          <div class="tv-logo" id="tvLogo">
+            <img src="assets/logo.svg" alt="People in Orbit" />
+          </div>
+          <div class="tv-static" id="tvStatic" style="display: none">
             <canvas id="staticCanvas"></canvas>
           </div>
+          <!-- YouTube player (created by API) -->
+          <div id="ytPlayer" class="tv-video"></div>
+          <!-- Spotify iframe (only used in spotify mode) -->
+          <iframe
+            id="tvSpotify"
+            class="tv-video"
+            src=""
+            frameborder="0"
+            allow="autoplay; encrypted-media"
+          ></iframe>
+          <!-- Interaction blocker — prevents YouTube controls from showing -->
+          <div class="tv-interact" id="tvInteract"></div>
+          <!-- Custom timeline bar -->
+          <div class="tv-timeline" id="tvTimeline">
+            <div class="tv-timeline-progress" id="tvTimelineProgress"></div>
+          </div>
+          <!-- Volume indicator -->
+          <div class="tv-volume" id="tvVolume">
+            <div class="tv-volume-bar" id="tvVolumeBar"></div>
+          </div>
+          <!-- TV effects overlay -->
+          <div class="tv-glare"></div>
+          <div class="tv-vignette"></div>
+          <div class="tv-scanlines"></div>
         </div>
 
         <!-- Warm Lamp — toggle dark/light -->
@@ -80,6 +118,12 @@
           <span class="hotspot-icon">&#128161;</span>
         </button>
 
+        <!-- TV power LED — on the bezel below the screen -->
+        <div class="tv-led" id="tvLed"></div>
+
+        <!-- Hifi LED — on the Vincent preamp -->
+        <div class="hifi-led" id="hifiLed"></div>
+
         <!-- Speaker pulse overlays -->
         <div class="speaker speaker--left" id="speakerLeft"></div>
         <div class="speaker speaker--right" id="speakerRight"></div>
@@ -88,21 +132,9 @@
         <div class="hotspot hotspot--book" id="bookEgg" aria-label="Secret">
           <span class="tooltip">You found a secret! 🪐</span>
         </div>
+
       </div>
 
-      <!-- Spotify floating player (fixed position, outside layer) -->
-      <div class="spotify-player" id="spotifyPlayer">
-        <iframe
-          id="spotifyFrame"
-          src=""
-          width="300"
-          height="80"
-          frameborder="0"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-        ></iframe>
-        <button class="spotify-close" id="spotifyClose" aria-label="Close player">&times;</button>
-      </div>
     </div>
 
     <script type="module" src="script.js"></script>

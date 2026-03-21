@@ -5,8 +5,23 @@ const IMG_W = 8192;
 const IMG_H = 5464;
 const IMG_RATIO = IMG_W / IMG_H;
 
-const SPOTIFY_EMBED_URL =
-  "https://open.spotify.com/embed/artist/39Hqg9HOVrra5TX0mdsj4N?utm_source=generator&theme=0";
+const SPOTIFY_ALBUMS = [
+  { id: "39Hqg9HOVrra5TX0mdsj4N", type: "artist", name: "All Tracks" },
+  { id: "6RRIzc0xLxyFyA3TA5XZwv", type: "album", name: "Close/Away" },
+  { id: "2ngfaUxYwwBPgboyQ8sdi8", type: "album", name: "Cycle 3" },
+  { id: "5bKbT2mKgfnFd0QPCk8elA", type: "album", name: "Spinning Downwards" },
+  { id: "5EYKwy9uGewQ6vmZvrohWv", type: "album", name: "Synchronized Whalestuff" },
+  { id: "6vH855OQUkdEdJAdcNIszT", type: "album", name: "Curved Sunlight" },
+  { id: "4yFyaG9UktAjKeKx2z2x1e", type: "album", name: "Close/Away (Galaxy of Wires)" },
+];
+let currentAlbumIndex = 0;
+
+function getSpotifyEmbedUrl() {
+  const a = SPOTIFY_ALBUMS[currentAlbumIndex];
+  return `https://open.spotify.com/embed/${a.type}/${a.id}?utm_source=generator&theme=0`;
+}
+
+const YOUTUBE_VIDEO_ID = "GH_SJYrT8EM";
 
 // --- State ---
 let isPlaying = false;
@@ -30,9 +45,6 @@ const staticCanvas = document.getElementById("staticCanvas");
 const lampBtn = document.getElementById("lampBtn");
 const speakerLeft = document.getElementById("speakerLeft");
 const speakerRight = document.getElementById("speakerRight");
-const spotifyPlayer = document.getElementById("spotifyPlayer");
-const spotifyFrame = document.getElementById("spotifyFrame");
-const spotifyClose = document.getElementById("spotifyClose");
 const tvScreen = document.getElementById("tvScreen");
 
 // --- FX Parameters ---
@@ -193,6 +205,8 @@ function updateAllAnchors(name) {
 // ============================================================
 // Image Bounds (object-fit: cover)
 // ============================================================
+const scene = document.getElementById("scene");
+
 function getImageBounds() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -200,29 +214,50 @@ function getImageBounds() {
   let renderedW, renderedH, offsetX, offsetY;
 
   if (viewRatio > IMG_RATIO) {
+    // Viewport wider — image width-fitted, overflows vertically
     renderedW = vw;
     renderedH = vw / IMG_RATIO;
   } else {
+    // Viewport taller — image height-fitted, overflows horizontally
     renderedH = vh;
     renderedW = vh * IMG_RATIO;
   }
 
-  offsetX = (vw - renderedW) / 2;
-  offsetY = (vh - renderedH) / 2;
+  // No negative offsets — image starts at 0,0, container scrolls
+  offsetX = 0;
+  offsetY = 0;
   return { renderedW, renderedH, offsetX, offsetY };
 }
 
-function syncHotspotLayer() {
-  const { renderedW, renderedH, offsetX, offsetY } = getImageBounds();
+function syncLayout() {
+  const { renderedW, renderedH } = getImageBounds();
+
+  // Size both background images to cover
+  bgImage.style.width = renderedW + "px";
+  bgImage.style.height = renderedH + "px";
+  bgImageDusk.style.width = renderedW + "px";
+  bgImageDusk.style.height = renderedH + "px";
+
+  // Hotspot layer matches image
   hotspotLayer.style.width = renderedW + "px";
   hotspotLayer.style.height = renderedH + "px";
-  hotspotLayer.style.left = offsetX + "px";
-  hotspotLayer.style.top = offsetY + "px";
+  hotspotLayer.style.left = "0px";
+  hotspotLayer.style.top = "0px";
+
+  // Center scroll position on first load
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  if (renderedW > vw) {
+    scene.scrollLeft = (renderedW - vw) / 2;
+  }
+  if (renderedH > vh) {
+    scene.scrollTop = (renderedH - vh) / 2;
+  }
 }
 
-syncHotspotLayer();
+syncLayout();
 window.addEventListener("resize", () => {
-  syncHotspotLayer();
+  syncLayout();
   resizeGL();
 });
 
@@ -394,9 +429,13 @@ function render(time) {
 
   bgImage.style.filter = `brightness(${fx.brightness}) contrast(${fx.contrast}) saturate(${fx.saturation})`;
 
-  const { renderedW, renderedH, offsetX, offsetY } = getImageBounds();
+  const { renderedW, renderedH } = getImageBounds();
+  // Account for scroll offset — FX canvas is fixed, image scrolls
+  const scrollX = scene.scrollLeft;
+  const scrollY = scene.scrollTop;
 
   gl.uniform2f(uMouse, mouseX, mouseY);
+  gl.uniform4f(uImageBounds, -scrollX, -scrollY, renderedW, renderedH);
   gl.uniform2f(uRes, fxCanvas.width, fxCanvas.height);
   gl.uniform1f(uTime, time * 0.001);
   gl.uniform1f(uVignette, fx.vignette);
@@ -407,7 +446,6 @@ function render(time) {
   gl.uniform1f(uDepthLightRadius, fx.depthLightRadius);
   gl.uniform1f(uDepthScale, fx.depthScale);
   gl.uniform1f(uAmbientLight, fx.ambientLight);
-  gl.uniform4f(uImageBounds, offsetX, offsetY, renderedW, renderedH);
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -448,6 +486,66 @@ fDepth.addBinding(fx, "depthLightRadius", { min: 0.1, max: 1.0, step: 0.01, labe
 fDepth.addBinding(fx, "depthScale", { min: 0.1, max: 5.0, step: 0.1, label: "Normal Scale" });
 fDepth.addBinding(fx, "ambientLight", { min: 0, max: 0.5, step: 0.01, label: "Ambient" });
 
+// --- TV Video Color Grading ---
+const tvGrade = {
+  brightness: 1.37,
+  contrast: 1.41,
+  saturation: 1.04,
+  warmth: 0.07,
+  hueRotate: 0,
+  opacity: 0.69,
+};
+
+function syncTVGrade() {
+  const ytEl = document.getElementById("ytPlayer");
+  const spotifyEl = document.getElementById("tvSpotify");
+  const filter = `brightness(${tvGrade.brightness}) contrast(${tvGrade.contrast}) saturate(${tvGrade.saturation}) sepia(${tvGrade.warmth}) hue-rotate(${tvGrade.hueRotate}deg)`;
+  if (ytEl) { ytEl.style.filter = filter; ytEl.style.opacity = tvGrade.opacity; }
+  if (spotifyEl) { spotifyEl.style.filter = filter; spotifyEl.style.opacity = tvGrade.opacity; }
+}
+
+const fTVGrade = pane.addFolder({ title: "TV Color" });
+fTVGrade.addBinding(tvGrade, "brightness", { min: 0.3, max: 2.0, step: 0.01 }).on("change", syncTVGrade);
+fTVGrade.addBinding(tvGrade, "contrast", { min: 0.3, max: 2.0, step: 0.01 }).on("change", syncTVGrade);
+fTVGrade.addBinding(tvGrade, "saturation", { min: 0, max: 2.0, step: 0.01 }).on("change", syncTVGrade);
+fTVGrade.addBinding(tvGrade, "warmth", { min: 0, max: 1.0, step: 0.01, label: "Warmth" }).on("change", syncTVGrade);
+fTVGrade.addBinding(tvGrade, "hueRotate", { min: -180, max: 180, step: 1, label: "Hue Shift" }).on("change", syncTVGrade);
+fTVGrade.addBinding(tvGrade, "opacity", { min: 0.3, max: 1.0, step: 0.01 }).on("change", syncTVGrade);
+
+// Apply initial grade
+syncTVGrade();
+
+// --- TV LED Position ---
+const led = { top: 92.2, left: 28.7, size: 2.5 };
+const tvLedEl = document.getElementById("tvLed");
+
+function syncLed() {
+  tvLedEl.style.top = led.top + "%";
+  tvLedEl.style.left = led.left + "%";
+  tvLedEl.style.width = led.size + "px";
+  tvLedEl.style.height = led.size + "px";
+}
+
+const fLed = pane.addFolder({ title: "LEDs" });
+fLed.addBinding(led, "left", { min: 10, max: 50, step: 0.1, label: "TV Left %" }).on("change", syncLed);
+fLed.addBinding(led, "top", { min: 80, max: 98, step: 0.1, label: "TV Top %" }).on("change", syncLed);
+fLed.addBinding(led, "size", { min: 2, max: 12, step: 0.5, label: "TV Size px" }).on("change", syncLed);
+
+// --- Hifi LED Position ---
+const hifi = { top: 83.6, left: 57.5, size: 4 };
+const hifiLedEl = document.getElementById("hifiLed");
+
+function syncHifiLed() {
+  hifiLedEl.style.top = hifi.top + "%";
+  hifiLedEl.style.left = hifi.left + "%";
+  hifiLedEl.style.width = hifi.size + "px";
+  hifiLedEl.style.height = hifi.size + "px";
+}
+
+fLed.addBinding(hifi, "left", { min: 40, max: 80, step: 0.1, label: "Hifi Left %" }).on("change", syncHifiLed);
+fLed.addBinding(hifi, "top", { min: 60, max: 95, step: 0.1, label: "Hifi Top %" }).on("change", syncHifiLed);
+fLed.addBinding(hifi, "size", { min: 2, max: 12, step: 0.5, label: "Hifi Size px" }).on("change", syncHifiLed);
+
 // --- Hotspot Layout Editor ---
 const fLayout = pane.addFolder({ title: "Layout Editor" });
 const editState = { editMode: false };
@@ -478,39 +576,255 @@ fLayout.addButton({ title: "Log All Positions" }).on("click", () => {
 // Interactive Features
 // ============================================================
 
-// --- Turntable ---
-turntableBtn.addEventListener("click", () => {
-  if (editMode) return; // don't trigger actions in edit mode
-  isPlaying = !isPlaying;
-  if (isPlaying) {
-    spotifyFrame.src = SPOTIFY_EMBED_URL;
-    spotifyPlayer.style.display = "block";
-    requestAnimationFrame(() => spotifyPlayer.classList.add("visible"));
-    turntableBtn.classList.add("playing");
-    speakerLeft.classList.add("pulsing");
-    speakerRight.classList.add("pulsing");
-    spawnNote();
-    noteInterval = setInterval(spawnNote, 800);
-  } else {
-    stopPlaying();
+// ============================================================
+// TV System — YouTube Player API + Spotify iframe
+// ============================================================
+let tvMode = "logo";
+const tvLogo = document.getElementById("tvLogo");
+const tvSpotify = document.getElementById("tvSpotify");
+const tvTimeline = document.getElementById("tvTimeline");
+const tvTimelineProgress = document.getElementById("tvTimelineProgress");
+const tvVolumeEl = document.getElementById("tvVolume");
+const tvVolumeBar = document.getElementById("tvVolumeBar");
+
+let ytPlayer = null;
+let ytReady = false;
+let ytPlaying = false;
+let ytVolume = 80;
+let timelineInterval = null;
+let volumeTimeout = null;
+
+// YouTube API — load dynamically and set up player
+window.onYouTubeIframeAPIReady = () => {
+  ytPlayer = new YT.Player("ytPlayer", {
+    videoId: YOUTUBE_VIDEO_ID,
+    playerVars: {
+      autoplay: 0,
+      controls: 0,
+      modestbranding: 1,
+      rel: 0,
+      showinfo: 0,
+      loop: 1,
+      playlist: YOUTUBE_VIDEO_ID,
+      playsinline: 1,
+    },
+    events: {
+      onReady: () => {
+        ytReady = true;
+        ytPlayer.setVolume(ytVolume);
+      },
+      onStateChange: (e) => {
+        ytPlaying = e.data === YT.PlayerState.PLAYING;
+        if (ytPlaying) {
+          startTimeline();
+        } else {
+          stopTimeline();
+        }
+      },
+    },
+  });
+};
+
+// Load YouTube IFrame API script
+const ytScript = document.createElement("script");
+ytScript.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(ytScript);
+
+function startTimeline() {
+  stopTimeline();
+  timelineInterval = setInterval(() => {
+    if (!ytPlayer || !ytReady) return;
+    const current = ytPlayer.getCurrentTime();
+    const duration = ytPlayer.getDuration();
+    if (duration > 0) {
+      tvTimelineProgress.style.width = (current / duration) * 100 + "%";
+    }
+  }, 250);
+}
+
+function stopTimeline() {
+  clearInterval(timelineInterval);
+  timelineInterval = null;
+}
+
+function setTVMode(mode) {
+  tvStatic.style.display = "none";
+  if (tvLogo) tvLogo.style.display = "none";
+  tvSpotify.classList.remove("active");
+  tvSpotify.style.height = "100%";
+  tvSpotify.src = "";
+  tvScreen.style.pointerEvents = "none";
+  tvTimeline.style.display = "none";
+
+  // Hide YouTube player div
+  const ytEl = document.getElementById("ytPlayer");
+  if (ytEl) ytEl.style.display = "none";
+
+  // Pause YouTube if switching away
+  if (mode !== "youtube" && ytReady && ytPlayer) {
+    ytPlayer.pauseVideo();
+    ytPlaying = false;
+    stopTimeline();
+  }
+
+  tvMode = mode;
+
+  // Toggle power LED
+  const tvLed = document.getElementById("tvLed");
+  if (tvLed) tvLed.classList.toggle("on", mode !== "logo");
+
+  switch (mode) {
+    case "logo":
+      if (tvLogo) tvLogo.style.display = "flex";
+      break;
+    case "spotify":
+      tvSpotify.src = getSpotifyEmbedUrl();
+      tvSpotify.classList.add("active");
+      tvSpotify.style.height = "152%";
+      tvScreen.style.pointerEvents = "auto";
+      break;
+    case "youtube":
+      if (ytEl) {
+        ytEl.style.display = "block";
+        ytEl.classList.add("active");
+      }
+      tvTimeline.style.display = "block";
+      tvScreen.style.pointerEvents = "auto";
+      if (ytReady && ytPlayer) {
+        ytPlayer.playVideo();
+      }
+      break;
+  }
+}
+
+// Start with logo
+setTVMode("logo");
+
+// --- TV click: play/pause YouTube ---
+tvBtn.addEventListener("click", () => {
+  if (editMode) return;
+
+  if (tvMode === "logo") {
+    // First click: start YouTube
+    if (isPlaying) stopPlaying();
+    setTVMode("youtube");
+  } else if (tvMode === "youtube") {
+    // Toggle play/pause
+    if (ytReady && ytPlayer) {
+      if (ytPlaying) {
+        ytPlayer.pauseVideo();
+      } else {
+        ytPlayer.playVideo();
+      }
+    }
+  } else if (tvMode === "spotify") {
+    // Switch back to YouTube
+    if (isPlaying) stopPlaying();
+    setTVMode("youtube");
   }
 });
 
-spotifyClose.addEventListener("click", (e) => {
-  e.stopPropagation();
-  stopPlaying();
+// --- Play button above TV ---
+const tvPlayBtn = document.getElementById("tvPlayBtn");
+if (tvPlayBtn) {
+  tvPlayBtn.addEventListener("click", () => {
+    if (editMode) return;
+    if (isPlaying) stopPlaying();
+    setTVMode("youtube");
+  });
+}
+
+// --- TV screen overlay: click to play/pause YouTube ---
+const tvInteract = document.getElementById("tvInteract");
+tvInteract.addEventListener("click", () => {
+  if (editMode) return;
+  if (tvMode === "logo") {
+    if (isPlaying) stopPlaying();
+    setTVMode("youtube");
+  } else if (tvMode === "youtube") {
+    if (ytReady && ytPlayer) {
+      if (ytPlaying) {
+        ytPlayer.pauseVideo();
+      } else {
+        ytPlayer.playVideo();
+      }
+    }
+  }
+});
+
+// --- Timeline: click to seek ---
+tvTimeline.addEventListener("click", (e) => {
+  if (!ytReady || !ytPlayer) return;
+  const rect = tvTimeline.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  const duration = ytPlayer.getDuration();
+  ytPlayer.seekTo(pct * duration, true);
+});
+
+// --- Volume: scroll/swipe on TV screen ---
+tvScreen.addEventListener("wheel", (e) => {
+  if (tvMode !== "youtube" || !ytReady || !ytPlayer) return;
+  e.preventDefault();
+  ytVolume = Math.max(0, Math.min(100, ytVolume - Math.sign(e.deltaY) * 5));
+  ytPlayer.setVolume(ytVolume);
+
+  // Show volume indicator
+  tvVolumeBar.style.height = ytVolume + "%";
+  tvVolumeEl.classList.add("visible");
+  clearTimeout(volumeTimeout);
+  volumeTimeout = setTimeout(() => tvVolumeEl.classList.remove("visible"), 1200);
+}, { passive: false });
+
+// Touch swipe for volume (mobile)
+let touchStartY = 0;
+tvScreen.addEventListener("touchstart", (e) => {
+  if (tvMode !== "youtube") return;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+tvScreen.addEventListener("touchmove", (e) => {
+  if (tvMode !== "youtube" || !ytReady || !ytPlayer) return;
+  const deltaY = touchStartY - e.touches[0].clientY;
+  touchStartY = e.touches[0].clientY;
+  ytVolume = Math.max(0, Math.min(100, ytVolume + deltaY * 0.5));
+  ytPlayer.setVolume(ytVolume);
+
+  tvVolumeBar.style.height = ytVolume + "%";
+  tvVolumeEl.classList.add("visible");
+  clearTimeout(volumeTimeout);
+  volumeTimeout = setTimeout(() => tvVolumeEl.classList.remove("visible"), 1200);
+}, { passive: true });
+
+// --- Turntable: cycle through albums in TV ---
+turntableBtn.addEventListener("click", () => {
+  if (editMode) return;
+
+  if (!isPlaying) {
+    // First click: start playing, show first album
+    isPlaying = true;
+    currentAlbumIndex = 0;
+    setTVMode("spotify");
+    turntableBtn.classList.add("playing");
+    speakerLeft.classList.add("pulsing");
+    speakerRight.classList.add("pulsing");
+    document.getElementById("hifiLed").classList.add("on");
+    spawnNote();
+    noteInterval = setInterval(spawnNote, 800);
+  } else {
+    // Subsequent clicks: cycle to next album
+    currentAlbumIndex = (currentAlbumIndex + 1) % SPOTIFY_ALBUMS.length;
+    setTVMode("spotify"); // reload with new album
+    spawnNote(); // visual feedback
+  }
 });
 
 function stopPlaying() {
   isPlaying = false;
-  spotifyPlayer.classList.remove("visible");
-  setTimeout(() => {
-    spotifyPlayer.style.display = "none";
-    spotifyFrame.src = "";
-  }, 400);
+  setTVMode("youtube");
   turntableBtn.classList.remove("playing");
   speakerLeft.classList.remove("pulsing");
   speakerRight.classList.remove("pulsing");
+  document.getElementById("hifiLed").classList.remove("on");
   clearInterval(noteInterval);
   noteInterval = null;
 }
@@ -558,11 +872,6 @@ function drawStatic() {
 }
 drawStatic();
 
-tvBtn.addEventListener("click", () => {
-  if (editMode) return;
-  const isVisible = tvStatic.style.display !== "none";
-  tvStatic.style.display = isVisible ? "none" : "block";
-});
 
 // --- ESC ---
 document.addEventListener("keydown", (e) => {
