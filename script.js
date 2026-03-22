@@ -1145,7 +1145,7 @@ document.addEventListener("keydown", (e) => {
 // ============================================================
 // Portal — Generated image behind the wall, mouse-following mask
 // ============================================================
-const portal = { size: 7 };
+const portal = { size: 10 };
 const portalBg = document.getElementById("portalBg");
 
 // Random portal background on each page load
@@ -1156,22 +1156,15 @@ const portalImages = [
   "assets/portal-4.png",
   "assets/portal-5.png",
   "assets/portal-6.png",
-  "assets/portal-7.jpg",
-  "assets/portal-8.jpg",
-  "assets/portal-9.jpg",
-  "assets/portal-10.jpg",
-  "assets/portal-11.jpg",
-  "assets/portal-12.jpg",
-  "assets/portal-13.jpg",
-  "assets/portal-14.jpg",
-  "assets/portal-15.jpg",
-  "assets/portal-16.jpg",
-  "assets/portal-17.jpg",
-  "assets/portal-18.jpg",
-  "assets/portal-19.jpg",
-  "assets/portal-20.jpg",
-  "assets/portal-21.jpg",
-  "assets/portal-22.jpg",
+  "assets/portal-7.jpg",   // dramatic B&W
+  "assets/portal-8.jpg",   // soft B&W
+  "assets/portal-9.jpg",   // solarized
+  "assets/portal-10.jpg",  // oil paint
+  "assets/portal-11.jpg",  // posterized
+  "assets/portal-12.jpg",  // embossed texture
+  "assets/portal-13.jpg",  // neon glow
+  "assets/portal-14.jpg",  // dreamy glow
+  "assets/portal-15.jpg",  // pencil sketch
   "assets/portal-23.png",
   "assets/portal-24.png",
   "assets/portal-25.png",
@@ -1195,9 +1188,39 @@ const portalImages = [
 let portalIdx = Math.floor(Math.random() * portalImages.length);
 portalBg.src = portalImages[portalIdx];
 
-scene.addEventListener("click", () => {
-  portalIdx = (portalIdx + 1) % portalImages.length;
-  portalBg.src = portalImages[portalIdx];
+let portalHolding = false;
+let portalGrowInterval = null;
+let portalRevealed = false;
+
+scene.addEventListener("mousedown", (e) => {
+  if (portalRevealed) {
+    // Already revealed — click to shrink back and cycle
+    portalRevealed = false;
+    portal.size = 10;
+    portalIdx = (portalIdx + 1) % portalImages.length;
+    portalBg.src = portalImages[portalIdx];
+    syncPortalMask();
+    return;
+  }
+  portalHolding = true;
+  portalGrowInterval = setInterval(() => {
+    if (!portalHolding) return;
+    portal.size = Math.min(portal.size + 0.8, 120);
+    syncPortalMask();
+    if (portal.size >= 120) {
+      portalHolding = false;
+      portalRevealed = true;
+      clearInterval(portalGrowInterval);
+    }
+  }, 16);
+});
+
+scene.addEventListener("mouseup", () => {
+  portalHolding = false;
+  clearInterval(portalGrowInterval);
+  if (portal.size >= 120) {
+    portalRevealed = true;
+  }
 });
 
 // Size portal bg to match the main image
