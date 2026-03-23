@@ -621,7 +621,8 @@ body {
   color: #111;
   padding: 1.2em 1.4em;
   border-radius: 4px;
-  min-width: 14em;
+  width: max-content;
+  max-width: 26em;
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 0.8em;
   line-height: 1.5;
@@ -661,4 +662,29 @@ body {
   text-decoration: underline;
 }
 
+.info-dot__panel .desc {
+  font-size: 0.8em;
+  color: #666;
+  line-height: 1.45;
+  margin: 0.4em 0;
+}
+
+.info-dot__panel .links {
+  margin-top: 0.6em;
+  padding-top: 0.5em;
+  border-top: 1px solid #e5e5e5;
+}
+
+.info-dot__panel .links a {
+  display: inline-block;
+  margin-right: 0.8em;
+}
+
+.info-dot__panel .members {
+  margin-top: 0.4em;
+}
+
+.info-dot__panel .members p {
+  white-space: nowrap;
+}
 
