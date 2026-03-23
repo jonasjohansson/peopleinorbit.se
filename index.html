@@ -12,6 +12,13 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <nav class="floating-nav" id="floatingNav">
+      <button data-target="band">Band</button>
+      <button data-target="contact">Contact</button>
+      <button data-target="vinyl">Music</button>
+      <button data-target="listen">Listen</button>
+      <button data-target="watch">Watch</button>
+    </nav>
     <div class="scene" id="scene">
       <!-- Fantasy world behind the wall -->
       <img src="" class="portal-bg" id="portalBg" alt="" />
@@ -166,6 +173,58 @@
         <!-- Easter egg: Book spine -->
         <div class="hotspot hotspot--book" id="bookEgg" aria-label="Secret">
           <span class="tooltip">You found a secret! 🪐</span>
+        </div>
+
+        <!-- IKEA-style info dots -->
+        <div class="info-dot" id="infoBand" >
+          <div class="info-dot__circle"></div>
+          <div class="info-dot__panel">
+            <h3>People in Orbit</h3>
+            <p>Adam Sass – Trumpet</p>
+            <p>Edvin Ekman – Tenor Saxophone, EFX</p>
+            <p>Niklas Bergström – Piano, Minimoog, EFX</p>
+            <p>Edvin Elmersson – Double Bass</p>
+            <p>Frank William Reis – Drums</p>
+          </div>
+        </div>
+
+        <div class="info-dot" id="infoContact" >
+          <div class="info-dot__circle"></div>
+          <div class="info-dot__panel">
+            <h3>Contact</h3>
+            <p><a href="mailto:info@peopleinorbit.se">info@peopleinorbit.se</a></p>
+            <p><a href="https://instagram.com/peopleinorbit" target="_blank" rel="noopener">Instagram</a></p>
+            <p><a href="https://open.spotify.com/artist/39Hqg9HOVrra5TX0mdsj4N" target="_blank" rel="noopener">Spotify</a></p>
+          </div>
+        </div>
+
+        <div class="info-dot" id="infoVinyl" >
+          <div class="info-dot__circle"></div>
+          <div class="info-dot__panel">
+            <h3>Viewpoint</h3>
+            <p>Available on vinyl & digital</p>
+            <p><a href="https://peopleinorbit.bandcamp.com/album/viewpoint" target="_blank" rel="noopener">Bandcamp</a></p>
+            <p><a href="https://open.spotify.com/artist/39Hqg9HOVrra5TX0mdsj4N" target="_blank" rel="noopener">Spotify</a></p>
+          </div>
+        </div>
+
+        <div class="info-dot" id="infoListen">
+          <div class="info-dot__circle"></div>
+          <div class="info-dot__panel">
+            <h3>Listen</h3>
+            <p><a href="https://open.spotify.com/artist/39Hqg9HOVrra5TX0mdsj4N" target="_blank" rel="noopener">Spotify</a></p>
+            <p><a href="https://peopleinorbit.bandcamp.com" target="_blank" rel="noopener">Bandcamp</a></p>
+            <p><a href="https://music.apple.com/artist/people-in-orbit" target="_blank" rel="noopener">Apple Music</a></p>
+          </div>
+        </div>
+
+        <div class="info-dot" id="infoWatch">
+          <div class="info-dot__circle"></div>
+          <div class="info-dot__panel">
+            <h3>Watch</h3>
+            <p><a href="https://youtube.com/@peopleinorbit" target="_blank" rel="noopener">YouTube</a></p>
+            <p>Music videos & live sessions</p>
+          </div>
         </div>
 
       </div>

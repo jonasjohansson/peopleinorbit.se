@@ -1242,7 +1242,7 @@ function syncPortalMask() {
   bgImageDusk.style.maskImage = mask;
 }
 
-scene.addEventListener("mousemove", (e) => {
+document.addEventListener("mousemove", (e) => {
   const { renderedW, renderedH } = getImageBounds();
   portalMouseX = ((e.clientX + scene.scrollLeft) / renderedW) * 100;
   portalMouseY = ((e.clientY + scene.scrollTop) / renderedH) * 100;
@@ -1255,3 +1255,96 @@ window.addEventListener("resize", () => { syncPortalSize(); syncPortalMask(); })
 
 const fPortal = pane.addFolder({ title: "Portal", expanded: false });
 fPortal.addBinding(portal, "size", { min: 2, max: 30, step: 0.5, label: "Size (vw)" }).on("change", syncPortalMask);
+
+// ============================================================
+// IKEA-style Info Dots
+// ============================================================
+const infoDots = {
+  band:    { left: 42, top: 38, el: document.getElementById("infoBand") },
+  contact: { left: 20, top: 42, el: document.getElementById("infoContact") },
+  vinyl:   { left: 78, top: 55, el: document.getElementById("infoVinyl") },
+  listen:  { left: 55, top: 65, el: document.getElementById("infoListen") },
+  watch:   { left: 28, top: 68, el: document.getElementById("infoWatch") },
+};
+
+function syncInfoDots() {
+  Object.values(infoDots).forEach((d) => {
+    d.el.style.left = d.left + "%";
+    d.el.style.top = d.top + "%";
+  });
+}
+syncInfoDots();
+
+document.querySelectorAll(".info-dot").forEach((dot) => {
+  dot.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const wasActive = dot.classList.contains("active");
+    document.querySelectorAll(".info-dot.active").forEach((d) => d.classList.remove("active"));
+    if (!wasActive) dot.classList.add("active");
+  });
+});
+
+document.addEventListener("click", () => {
+  document.querySelectorAll(".info-dot.active").forEach((d) => d.classList.remove("active"));
+});
+
+// GUI for positioning info dots
+const fInfoDots = pane.addFolder({ title: "Info Dots", expanded: false });
+Object.entries(infoDots).forEach(([name, d]) => {
+  const f = fInfoDots.addFolder({ title: name, expanded: false });
+  f.addBinding(d, "left", { min: 0, max: 100, step: 0.5, label: "Left %" }).on("change", syncInfoDots);
+  f.addBinding(d, "top",  { min: 0, max: 100, step: 0.5, label: "Top %" }).on("change", syncInfoDots);
+});
+
+// ============================================================
+// Floating Navigation — scroll & zoom to targets
+// ============================================================
+// Nav targets reference infoDots directly
+const navTargets = {
+  band:    { get left() { return infoDots.band.left; },    get top() { return infoDots.band.top; },    dot: "infoBand" },
+  contact: { get left() { return infoDots.contact.left; }, get top() { return infoDots.contact.top; }, dot: "infoContact" },
+  vinyl:   { get left() { return infoDots.vinyl.left; },   get top() { return infoDots.vinyl.top; },   dot: "infoVinyl" },
+  listen:  { get left() { return infoDots.listen.left; },  get top() { return infoDots.listen.top; },  dot: "infoListen" },
+  watch:   { get left() { return infoDots.watch.left; },   get top() { return infoDots.watch.top; },   dot: "infoWatch" },
+};
+
+function navigateTo(target) {
+  const t = navTargets[target];
+  if (!t) return;
+
+  const { renderedW, renderedH } = getImageBounds();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // Target pixel position in the image
+  const targetX = (t.left / 100) * renderedW;
+  const targetY = (t.top / 100) * renderedH;
+
+  // Scroll so target is centered in viewport
+  const scrollX = Math.max(0, Math.min(targetX - vw / 2, renderedW - vw));
+  const scrollY = Math.max(0, Math.min(targetY - vh / 2, renderedH - vh));
+
+  scene.scrollTo({ left: scrollX, top: scrollY, behavior: "smooth" });
+
+  // Open the corresponding info dot if it has one
+  if (t.dot) {
+    // Small delay so scroll starts first
+    setTimeout(() => {
+      document.querySelectorAll(".info-dot.active").forEach((d) => d.classList.remove("active"));
+      const dotEl = document.getElementById(t.dot);
+      if (dotEl) dotEl.classList.add("active");
+    }, 400);
+  }
+
+  // Highlight active nav button
+  document.querySelectorAll(".floating-nav button").forEach((b) => {
+    b.classList.toggle("active", b.dataset.target === target);
+  });
+}
+
+document.querySelectorAll(".floating-nav button").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    navigateTo(btn.dataset.target);
+  });
+});
