@@ -1260,11 +1260,11 @@ fPortal.addBinding(portal, "size", { min: 2, max: 30, step: 0.5, label: "Size (v
 // IKEA-style Info Dots
 // ============================================================
 const infoDots = {
-  band:    { left: 42, top: 38, el: document.getElementById("infoBand") },
-  contact: { left: 20, top: 42, el: document.getElementById("infoContact") },
-  vinyl:   { left: 78, top: 55, el: document.getElementById("infoVinyl") },
-  listen:  { left: 55, top: 65, el: document.getElementById("infoListen") },
-  watch:   { left: 28, top: 68, el: document.getElementById("infoWatch") },
+  band:    { left: 50, top: 30.5, el: document.getElementById("infoBand") },
+  contact: { left: 20, top: 38, el: document.getElementById("infoContact") },
+  vinyl:   { left: 73, top: 52, el: document.getElementById("infoVinyl") },
+  listen:  { left: 55.5, top: 69.5, el: document.getElementById("infoListen") },
+  watch:   { left: 43.5, top: 66.5, el: document.getElementById("infoWatch") },
 };
 
 function syncInfoDots() {
