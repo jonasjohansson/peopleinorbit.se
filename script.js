@@ -667,7 +667,7 @@ function syncLed() {
 const fLed = pane.addFolder({ title: "LEDs", expanded: false });
 fLed.addBinding(led, "left", { min: 10, max: 50, step: 0.1, label: "TV Left %" }).on("change", syncLed);
 fLed.addBinding(led, "top", { min: 80, max: 98, step: 0.1, label: "TV Top %" }).on("change", syncLed);
-fLed.addBinding(led, "size", { min: 2, max: 12, step: 0.5, label: "TV Size px" }).on("change", syncLed);
+fLed.addBinding(led, "size", { min: 2, max: 12, step: 0.1, label: "TV Size px" }).on("change", syncLed);
 
 // --- Hifi LED Position ---
 const hifi = { top: 83.6, left: 57.5, size: 4 };
@@ -682,7 +682,7 @@ function syncHifiLed() {
 
 fLed.addBinding(hifi, "left", { min: 40, max: 80, step: 0.1, label: "Hifi Left %" }).on("change", syncHifiLed);
 fLed.addBinding(hifi, "top", { min: 60, max: 95, step: 0.1, label: "Hifi Top %" }).on("change", syncHifiLed);
-fLed.addBinding(hifi, "size", { min: 2, max: 12, step: 0.5, label: "Hifi Size px" }).on("change", syncHifiLed);
+fLed.addBinding(hifi, "size", { min: 2, max: 12, step: 0.1, label: "Hifi Size px" }).on("change", syncHifiLed);
 
 
 // --- Wall Text Positioning ---
@@ -711,6 +711,7 @@ const fontOptions = {
   "Eraser": "'Eraser', cursive",
   "Colored Crayons": "'Colored Crayons', cursive",
   "Clouds of Despair": "'Clouds of Despair LSF', cursive",
+  "Analo Grotesk": "'Analo Grotesk-Trial', sans-serif",
   "ABC Connect": "'ABC Connect Unlicensed Trial', sans-serif",
   "ABC Connect Mono": "'ABC Connect Mono Unlicensed Trial', monospace",
   "ABC Favorit": "'ABC Favorit Unlicensed Trial', sans-serif",
@@ -730,6 +731,8 @@ const fontOptions = {
   "Matrice": "'Matrice', sans-serif",
   "OffBit": "'OffBit', sans-serif",
   "PP Neue Bit": "'PP Neue Bit', sans-serif",
+  "Saol Text": "'SaolText-Regular', serif",
+  "Trinite": "'TriniteNo1', serif",
   "Redaction": "'Redaction', serif",
   "Redaction 10": "'Redaction 10', serif",
   "Redaction 50": "'Redaction 50', serif",
@@ -839,24 +842,24 @@ fText.addBinding(wallText, "color", { label: "Color" }).on("change", syncWallTex
 
 // Dates
 const fDates = fText.addFolder({ title: "Dates", expanded: false });
-fDates.addBinding(wallText, "datesLeft", { min: 0, max: 60, step: 0.5, label: "Left %" }).on("change", syncWallText);
-fDates.addBinding(wallText, "datesTop", { min: 20, max: 80, step: 0.5, label: "Top %" }).on("change", syncWallText);
+fDates.addBinding(wallText, "datesLeft", { min: 0, max: 60, step: 0.1, label: "Left %" }).on("change", syncWallText);
+fDates.addBinding(wallText, "datesTop", { min: 20, max: 80, step: 0.1, label: "Top %" }).on("change", syncWallText);
 fDates.addBinding(wallText, "datesFontSize", { min: 0.5, max: 3.0, step: 0.1, label: "Size" }).on("change", syncWallText);
 fDates.addBinding(wallText, "datesLineHeight", { min: 0.5, max: 3.0, step: 0.05, label: "Line H" }).on("change", syncWallText);
 fDates.addBinding(wallText, "datesFont", { options: fontOpts, label: "Font" }).on("change", syncWallText);
 
 // Members
 const fMembers = fText.addFolder({ title: "Members", expanded: false });
-fMembers.addBinding(wallText, "membersLeft", { min: 40, max: 95, step: 0.5, label: "Left %" }).on("change", syncWallText);
-fMembers.addBinding(wallText, "membersTop", { min: 10, max: 70, step: 0.5, label: "Top %" }).on("change", syncWallText);
+fMembers.addBinding(wallText, "membersLeft", { min: 40, max: 95, step: 0.1, label: "Left %" }).on("change", syncWallText);
+fMembers.addBinding(wallText, "membersTop", { min: 10, max: 70, step: 0.1, label: "Top %" }).on("change", syncWallText);
 fMembers.addBinding(wallText, "membersFontSize", { min: 0.3, max: 2.0, step: 0.05, label: "Size" }).on("change", syncWallText);
 fMembers.addBinding(wallText, "membersLineHeight", { min: 0.5, max: 3.0, step: 0.05, label: "Line H" }).on("change", syncWallText);
 fMembers.addBinding(wallText, "membersFont", { options: fontOpts, label: "Font" }).on("change", syncWallText);
 
 // Right
 const fRight = fText.addFolder({ title: "Right Wall", expanded: false });
-fRight.addBinding(wallText, "rightLeft", { min: 60, max: 98, step: 0.5, label: "Left %" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightTop", { min: 5, max: 60, step: 0.5, label: "Top %" }).on("change", syncWallText);
+fRight.addBinding(wallText, "rightLeft", { min: 60, max: 98, step: 0.1, label: "Left %" }).on("change", syncWallText);
+fRight.addBinding(wallText, "rightTop", { min: 5, max: 60, step: 0.1, label: "Top %" }).on("change", syncWallText);
 fRight.addBinding(wallText, "rightFontSize", { min: 0.3, max: 2.0, step: 0.05, label: "Size" }).on("change", syncWallText);
 fRight.addBinding(wallText, "rightLineHeight", { min: 0.5, max: 3.0, step: 0.05, label: "Line H" }).on("change", syncWallText);
 fRight.addBinding(wallText, "rightFont", { options: fontOpts, label: "Font" }).on("change", syncWallText);
@@ -1372,18 +1375,18 @@ syncPortalSize();
 window.addEventListener("resize", () => { syncPortalSize(); syncPortalMask(); });
 
 const fPortal = pane.addFolder({ title: "Portal", expanded: false });
-fPortal.addBinding(portal, "size", { min: 2, max: 30, step: 0.5, label: "Size (vw)" }).on("change", syncPortalMask);
+fPortal.addBinding(portal, "size", { min: 2, max: 30, step: 0.1, label: "Size (vw)" }).on("change", syncPortalMask);
 
 // ============================================================
 // IKEA-style Info Dots
 // ============================================================
 const infoDots = {
-  band:    { left: 50, top: 30.5, el: document.getElementById("infoBand") },
-  contact: { left: 20, top: 38, el: document.getElementById("infoContact") },
-  vinyl:     { left: 73, top: 52, el: document.getElementById("infoVinyl") },
-  closeaway: { left: 90, top: 69, el: document.getElementById("infoCloseAway") },
-  listen:    { left: 55.5, top: 69.5, el: document.getElementById("infoListen") },
-  watch:   { left: 43.5, top: 66.5, el: document.getElementById("infoWatch") },
+  band:    { left: 56.8, top: 28.8, el: document.getElementById("infoBand") },
+  contact: { left: 22, top: 35.5, el: document.getElementById("infoContact") },
+  vinyl:     { left: 78.3, top: 51.5, el: document.getElementById("infoVinyl") },
+  closeaway: { left: 82.6, top: 68.5, el: document.getElementById("infoCloseAway") },
+  listen:    { left: 54.5, top: 68, el: document.getElementById("infoListen") },
+  watch:   { left: 28.8, top: 66.6, el: document.getElementById("infoWatch") },
 };
 
 function syncInfoDots() {
@@ -1423,8 +1426,8 @@ document.addEventListener("click", () => {
 const textTransforms = { "none": "none", "uppercase": "uppercase", "lowercase": "lowercase", "capitalize": "capitalize" };
 const hotspotStyles = {
   style: "dot",
-  navFont: "PP Mondwest", navFontSize: 0.95, navTransform: "uppercase",
-  navTextColor: "#ffffff", navBgColor: "#0f0f0f", navBgOpacity: 0.6,
+  navFont: "Analo Grotesk", navFontSize: 0.95, navTransform: "uppercase",
+  navTextColor: "#ffab41", navBgColor: "#4e4e4e", navBgOpacity: 0.0,
   panelFont: "System", panelHeadingFont: "System",
 };
 const styleOptions = {
@@ -1461,6 +1464,7 @@ function applyUIFonts() {
     nav.querySelectorAll("button").forEach(btn => {
       btn.style.fontFamily = ff;
       btn.style.textTransform = hotspotStyles.navTransform;
+      btn.style.color = hotspotStyles.navTextColor;
     });
   }
   panels.forEach(p => { p.style.fontFamily = fontOptions[hotspotStyles.panelFont]; });
@@ -1483,8 +1487,8 @@ fInfoDots.addBinding(hotspotStyles, "panelFont", { options: fontOpts, label: "Pa
 fInfoDots.addBinding(hotspotStyles, "panelHeadingFont", { options: fontOpts, label: "Heading Font" }).on("change", applyUIFonts);
 Object.entries(infoDots).forEach(([name, d]) => {
   const f = fInfoDots.addFolder({ title: name, expanded: false });
-  f.addBinding(d, "left", { min: 0, max: 100, step: 0.5, label: "Left %" }).on("change", syncInfoDots);
-  f.addBinding(d, "top",  { min: 0, max: 100, step: 0.5, label: "Top %" }).on("change", syncInfoDots);
+  f.addBinding(d, "left", { min: 0, max: 100, step: 0.1, label: "Left %" }).on("change", syncInfoDots);
+  f.addBinding(d, "top",  { min: 0, max: 100, step: 0.1, label: "Top %" }).on("change", syncInfoDots);
 });
 
 // ============================================================
