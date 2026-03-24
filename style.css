@@ -5,6 +5,19 @@
   font-style: normal;
 }
 
+:root {
+  --panel-bg: #ffab41;
+  --panel-text: #1a1a1a;
+  --panel-link: #111;
+  --panel-heading: #111;
+  --panel-border: rgba(0, 0, 0, 0.12);
+  --panel-padding: 1.2em 1.4em;
+  --panel-radius: 0.4em;
+  --panel-font-size: 1em;
+  --panel-line-height: 1.5;
+  --panel-max-width: 26em;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -69,6 +82,14 @@
 .floating-nav button.active {
   background: var(--nav-active-bg);
   color: var(--nav-text-hover);
+}
+
+.floating-nav button.nav-special {
+  color: #e8c47a;
+}
+
+.floating-nav button.nav-special:hover {
+  color: #f5d99a;
 }
 
 @media (max-width: 480px) {
@@ -780,16 +801,16 @@ body {
   position: absolute;
   bottom: calc(100% + 1.2em);
   left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  background: #fff;
-  color: #111;
-  padding: 1.2em 1.4em;
-  border-radius: 4px;
+  transform: translateX(-50%);
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  padding: var(--panel-padding);
+  border-radius: var(--panel-radius);
   width: max-content;
-  max-width: 26em;
+  max-width: var(--panel-max-width);
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 0.8em;
-  line-height: 1.5;
+  font-size: var(--panel-font-size);
+  line-height: var(--panel-line-height);
   opacity: 0;
   pointer-events: none;
   transition: none;
@@ -798,14 +819,13 @@ body {
 .info-dot.active .info-dot__panel {
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
 }
 
 .info-dot__panel h3 {
   margin: 0 0 0.2em;
   font-size: 1em;
   font-weight: 700;
-  color: #111;
+  color: var(--panel-heading);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -813,11 +833,11 @@ body {
 .info-dot__panel p {
   margin: 0.15em 0;
   font-size: 0.85em;
-  color: #555;
+  color: var(--panel-text);
 }
 
 .info-dot__panel a {
-  color: #111;
+  color: var(--panel-link);
   text-decoration: none;
   font-weight: 500;
 }
@@ -827,8 +847,8 @@ body {
 }
 
 .info-dot__panel .desc {
-  font-size: 0.8em;
-  color: #666;
+  font-size: 0.85em;
+  color: var(--panel-text);
   line-height: 1.45;
   margin: 0.4em 0;
 }
@@ -836,7 +856,7 @@ body {
 .info-dot__panel .links {
   margin-top: 0.6em;
   padding-top: 0.5em;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--panel-border);
 }
 
 .info-dot__panel .links a {

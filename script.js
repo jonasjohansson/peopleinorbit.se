@@ -27,10 +27,6 @@ const YOUTUBE_VIDEO_ID = "GH_SJYrT8EM";
 let isPlaying = false;
 let isDark = false;
 let noteInterval = null;
-let mouseX = 0.5;
-let mouseY = 0.5;
-let targetMouseX = 0.5;
-let targetMouseY = 0.5;
 
 // --- Elements ---
 const bgImage = document.getElementById("bgImage");
@@ -54,25 +50,9 @@ const fx = {
   tintR: 1.0,
   tintG: 0.95,
   tintB: 0.9,
-  grain: 0.08,
   brightness: 1.0,
   contrast: 1.0,
   saturation: 1.0,
-  depthEnabled: false,
-  depthLightIntensity: 0.6,
-  depthLightRadius: 0.5,
-  depthScale: 3.0,
-  ambientLight: 0.1,
-  // DOF
-  dofEnabled: false,
-  dofFocusDepth: 0.5,
-  dofRange: 0.3,
-  dofBlur: 3.0,
-  // Chromatic Aberration
-  chromatic: 0.0,
-  // Bloom
-  bloom: 0.0,
-  bloomThreshold: 0.7,
 };
 
 // ============================================================
@@ -276,14 +256,8 @@ window.addEventListener("resize", () => {
   resizeGL();
 });
 
-// --- Mouse tracking (smooth) ---
-window.addEventListener("mousemove", (e) => {
-  targetMouseX = e.clientX / window.innerWidth;
-  targetMouseY = e.clientY / window.innerHeight;
-});
-
 // ============================================================
-// WebGL Post-Processing with Depth Map
+// WebGL Post-Processing
 // ============================================================
 const gl = fxCanvas.getContext("webgl", { alpha: true, premultipliedAlpha: false });
 
@@ -299,39 +273,11 @@ const vertSrc = `
 const fragSrc = `
   precision mediump float;
   varying vec2 v_uv;
-  uniform sampler2D u_depth;
-  uniform vec2 u_mouse;
   uniform vec2 u_resolution;
-  uniform float u_time;
   uniform float u_vignette;
   uniform float u_vignetteSize;
   uniform vec3 u_tint;
-  uniform float u_grain;
-  uniform float u_depthLightIntensity;
-  uniform float u_depthLightRadius;
-  uniform float u_depthScale;
-  uniform float u_ambientLight;
   uniform vec4 u_imageBounds;
-  // New effects
-  uniform float u_dofEnabled;
-  uniform float u_dofFocusDepth;
-  uniform float u_dofRange;
-  uniform float u_dofBlur;
-  uniform float u_chromatic;
-  uniform float u_bloom;
-  uniform float u_bloomThreshold;
-
-  float hash(vec2 p) {
-    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-    p3 += dot(p3, p3.yzx + 33.33);
-    return fract((p3.x + p3.y) * p3.z);
-  }
-
-  // Sample depth at image UV
-  float getDepth(vec2 imgUV) {
-    if (imgUV.x < 0.0 || imgUV.x > 1.0 || imgUV.y < 0.0 || imgUV.y > 1.0) return 0.0;
-    return texture2D(u_depth, imgUV).r;
-  }
 
   // Convert screen UV to image UV
   vec2 toImgUV(vec2 screenUV) {
@@ -345,76 +291,6 @@ const fragSrc = `
     vec2 imgUV = toImgUV(screenUV);
     vec4 color = vec4(0.0);
     bool inImage = imgUV.x >= 0.0 && imgUV.x <= 1.0 && imgUV.y >= 0.0 && imgUV.y <= 1.0;
-
-    if (inImage) {
-      // --- Depth-based lighting ---
-      float texelX = 1.0 / u_resolution.x * 2.0;
-      float texelY = 1.0 / u_resolution.y * 2.0;
-      float dL = getDepth(imgUV + vec2(-texelX, 0.0));
-      float dR = getDepth(imgUV + vec2( texelX, 0.0));
-      float dU = getDepth(imgUV + vec2(0.0, -texelY));
-      float dD = getDepth(imgUV + vec2(0.0,  texelY));
-
-      vec3 normal = normalize(vec3(
-        (dL - dR) * u_depthScale,
-        (dU - dD) * u_depthScale,
-        1.0
-      ));
-
-      vec2 lightPos = vec2(u_mouse.x, 1.0 - u_mouse.y);
-      vec3 lightDir = normalize(vec3(
-        (lightPos.x - screenUV.x) * (u_resolution.x / u_resolution.y),
-        lightPos.y - screenUV.y,
-        0.35
-      ));
-
-      float dist = length(screenUV - lightPos);
-      float atten = 1.0 - smoothstep(0.0, u_depthLightRadius, dist);
-      float diffuse = max(dot(normal, lightDir), 0.0);
-      float lighting = (diffuse * atten * u_depthLightIntensity) + u_ambientLight;
-      vec3 lightColor = vec3(1.0, 0.92, 0.82) * lighting;
-      color = vec4(lightColor, lighting * 0.6);
-
-      // --- DOF (depth of field) ---
-      if (u_dofEnabled > 0.5) {
-        float depth = getDepth(imgUV);
-        float blur = abs(depth - u_dofFocusDepth);
-        blur = smoothstep(0.0, u_dofRange, blur) * u_dofBlur;
-        // Darken out-of-focus areas (simulates blur by darkening)
-        float dofDarken = blur * 0.15;
-        color.rgb -= vec3(dofDarken);
-        color.a = max(color.a, dofDarken);
-      }
-
-      // --- Bloom (brighten already bright areas) ---
-      if (u_bloom > 0.0) {
-        float depth = getDepth(imgUV);
-        // Bloom from bright/near areas
-        float bloomMask = smoothstep(u_bloomThreshold, 1.0, 1.0 - depth);
-        float bloomVal = bloomMask * u_bloom;
-        color.rgb += vec3(bloomVal * 0.8, bloomVal * 0.7, bloomVal * 0.5);
-        color.a = max(color.a, bloomVal * 0.4);
-      }
-    }
-
-    // --- Chromatic aberration (RGB split at edges) ---
-    if (u_chromatic > 0.0 && inImage) {
-      vec2 center = vec2(0.5);
-      vec2 dir = screenUV - center;
-      float distFromCenter = length(dir);
-      float caAmount = distFromCenter * u_chromatic * 0.01;
-      // Offset red and blue channels
-      vec2 rUV = toImgUV(screenUV + dir * caAmount);
-      vec2 bUV = toImgUV(screenUV - dir * caAmount);
-      float rDepth = getDepth(rUV);
-      float bDepth = getDepth(bUV);
-      // Apply as color fringing overlay
-      float caR = (rDepth - getDepth(imgUV)) * u_chromatic * 0.3;
-      float caB = (bDepth - getDepth(imgUV)) * u_chromatic * 0.3;
-      color.r += caR;
-      color.b += caB;
-      color.a = max(color.a, max(abs(caR), abs(caB)));
-    }
 
     // --- Vignette ---
     if (u_vignette > 0.0) {
@@ -430,13 +306,6 @@ const fragSrc = `
       vec3 tintOffset = (u_tint - 1.0);
       color.rgb += tintOffset * 0.3;
       color.a = max(color.a, length(tintOffset) * 0.6);
-    }
-
-    // --- Grain (applied over entire image area) ---
-    if (u_grain > 0.0 && inImage) {
-      float grainVal = hash(uv * u_resolution + u_time * 100.0) - 0.5;
-      color.rgb += vec3(grainVal * u_grain);
-      color.a = max(color.a, u_grain * 0.8);
     }
 
     gl_FragColor = color;
@@ -468,38 +337,11 @@ const aPos = gl.getAttribLocation(prog, "a_pos");
 gl.enableVertexAttribArray(aPos);
 gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-const uMouse = gl.getUniformLocation(prog, "u_mouse");
 const uRes = gl.getUniformLocation(prog, "u_resolution");
-const uTime = gl.getUniformLocation(prog, "u_time");
 const uVignette = gl.getUniformLocation(prog, "u_vignette");
 const uVignetteSize = gl.getUniformLocation(prog, "u_vignetteSize");
 const uTint = gl.getUniformLocation(prog, "u_tint");
-const uGrain = gl.getUniformLocation(prog, "u_grain");
-const uDepthLightIntensity = gl.getUniformLocation(prog, "u_depthLightIntensity");
-const uDepthLightRadius = gl.getUniformLocation(prog, "u_depthLightRadius");
-const uDepthScale = gl.getUniformLocation(prog, "u_depthScale");
-const uAmbientLight = gl.getUniformLocation(prog, "u_ambientLight");
 const uImageBounds = gl.getUniformLocation(prog, "u_imageBounds");
-const uDofEnabled = gl.getUniformLocation(prog, "u_dofEnabled");
-const uDofFocusDepth = gl.getUniformLocation(prog, "u_dofFocusDepth");
-const uDofRange = gl.getUniformLocation(prog, "u_dofRange");
-const uDofBlur = gl.getUniformLocation(prog, "u_dofBlur");
-const uChromatic = gl.getUniformLocation(prog, "u_chromatic");
-const uBloom = gl.getUniformLocation(prog, "u_bloom");
-const uBloomThreshold = gl.getUniformLocation(prog, "u_bloomThreshold");
-
-const depthTex = gl.createTexture();
-const depthImg = new Image();
-depthImg.crossOrigin = "anonymous";
-depthImg.onload = () => {
-  gl.bindTexture(gl.TEXTURE_2D, depthTex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, depthImg);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-};
-depthImg.src = "assets/pio-depth.png";
 
 function resizeGL() {
   const w = window.innerWidth;
@@ -511,9 +353,6 @@ function resizeGL() {
 resizeGL();
 
 function render(time) {
-  mouseX += (targetMouseX - mouseX) * 0.08;
-  mouseY += (targetMouseY - mouseY) * 0.08;
-
   bgImage.style.filter = `brightness(${fx.brightness}) contrast(${fx.contrast}) saturate(${fx.saturation})`;
 
   const { renderedW, renderedH } = getImageBounds();
@@ -521,33 +360,16 @@ function render(time) {
   const scrollX = scene.scrollLeft;
   const scrollY = scene.scrollTop;
 
-  gl.uniform2f(uMouse, mouseX, mouseY);
   gl.uniform4f(uImageBounds, -scrollX, -scrollY, renderedW, renderedH);
   gl.uniform2f(uRes, fxCanvas.width, fxCanvas.height);
-  gl.uniform1f(uTime, time * 0.001);
   gl.uniform1f(uVignette, fx.vignette);
   gl.uniform1f(uVignetteSize, fx.vignetteSize);
   gl.uniform3f(uTint, fx.tintR, fx.tintG, fx.tintB);
-  gl.uniform1f(uGrain, fx.grain);
-  gl.uniform1f(uDepthLightIntensity, fx.depthEnabled ? fx.depthLightIntensity : 0);
-  gl.uniform1f(uDepthLightRadius, fx.depthLightRadius);
-  gl.uniform1f(uDepthScale, fx.depthScale);
-  gl.uniform1f(uAmbientLight, fx.depthEnabled ? fx.ambientLight : 0);
-  gl.uniform1f(uDofEnabled, fx.dofEnabled ? 1.0 : 0.0);
-  gl.uniform1f(uDofFocusDepth, fx.dofFocusDepth);
-  gl.uniform1f(uDofRange, fx.dofRange);
-  gl.uniform1f(uDofBlur, fx.dofBlur);
-  gl.uniform1f(uChromatic, fx.chromatic);
-  gl.uniform1f(uBloom, fx.bloom);
-  gl.uniform1f(uBloomThreshold, fx.bloomThreshold);
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, depthTex);
-  gl.uniform1i(gl.getUniformLocation(prog, "u_depth"), 0);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
   requestAnimationFrame(render);
@@ -600,29 +422,6 @@ fColor.addBinding(fx, "saturation", { min: 0, max: 2, step: 0.01 });
 fColor.addBinding(fx, "tintR", { min: 0.5, max: 1.5, step: 0.01, label: "Tint R" });
 fColor.addBinding(fx, "tintG", { min: 0.5, max: 1.5, step: 0.01, label: "Tint G" });
 fColor.addBinding(fx, "tintB", { min: 0.5, max: 1.5, step: 0.01, label: "Tint B" });
-
-const fEffects = pane.addFolder({ title: "Effects", expanded: false });
-fEffects.addBinding(fx, "grain", { min: 0, max: 0.3, step: 0.01, label: "Film Grain" });
-
-const fDepth = pane.addFolder({ title: "Depth Lighting", expanded: false });
-fDepth.addBinding(fx, "depthEnabled", { label: "Enabled" });
-fDepth.addBinding(fx, "depthLightIntensity", { min: 0, max: 1, step: 0.01, label: "Intensity" });
-fDepth.addBinding(fx, "depthLightRadius", { min: 0.1, max: 1.0, step: 0.01, label: "Radius" });
-fDepth.addBinding(fx, "depthScale", { min: 0.1, max: 5.0, step: 0.1, label: "Normal Scale" });
-fDepth.addBinding(fx, "ambientLight", { min: 0, max: 0.5, step: 0.01, label: "Ambient" });
-
-const fDof = pane.addFolder({ title: "Depth of Field", expanded: false });
-fDof.addBinding(fx, "dofEnabled", { label: "Enabled" });
-fDof.addBinding(fx, "dofFocusDepth", { min: 0, max: 1, step: 0.01, label: "Focus Depth" });
-fDof.addBinding(fx, "dofRange", { min: 0.05, max: 1, step: 0.01, label: "Range" });
-fDof.addBinding(fx, "dofBlur", { min: 0.5, max: 10, step: 0.1, label: "Blur Amount" });
-
-const fChroma = pane.addFolder({ title: "Chromatic Aberration", expanded: false });
-fChroma.addBinding(fx, "chromatic", { min: 0, max: 5, step: 0.1, label: "Amount" });
-
-const fBloom = pane.addFolder({ title: "Bloom", expanded: false });
-fBloom.addBinding(fx, "bloom", { min: 0, max: 1, step: 0.01, label: "Intensity" });
-fBloom.addBinding(fx, "bloomThreshold", { min: 0, max: 1, step: 0.01, label: "Threshold" });
 
 // --- TV Video Color Grading ---
 const tvGrade = {
@@ -685,13 +484,6 @@ fLed.addBinding(hifi, "top", { min: 60, max: 95, step: 0.1, label: "Hifi Top %" 
 fLed.addBinding(hifi, "size", { min: 2, max: 12, step: 0.1, label: "Hifi Size px" }).on("change", syncHifiLed);
 
 
-// --- Wall Text Positioning ---
-const tourDatesEl = document.getElementById("tourDates");
-const bandMembersEl = document.getElementById("bandMembers");
-
-const rightWallEl = document.getElementById("rightWallText");
-
-const blendModes = ["normal","multiply","screen","overlay","darken","lighten","color-dodge","color-burn","soft-light","hard-light"];
 const fontOptions = {
   "Permanent Marker": "'Permanent Marker', cursive",
   "Caveat": "'Caveat', cursive",
@@ -749,172 +541,8 @@ const fontOptions = {
   "System": "system-ui, sans-serif",
 };
 
-const wallText = {
-  blend: "multiply",
-  color: "#3b3028",
-  datesLeft: 19, datesTop: 49.5, datesFontSize: 1.1, datesLineHeight: 1.2, datesFont: "Permanent Marker",
-  membersLeft: 48, membersTop: 42, membersFontSize: 0.75, membersLineHeight: 1.2, membersFont: "Caveat",
-  rightLeft: 85, rightTop: 23, rightFontSize: 0.7, rightLineHeight: 1.2, rightFont: "Caveat",
-  rightTRx: 0, rightTRy: 0, rightBRx: 0, rightBRy: 0, rightDebug: false,
-};
-
-// Compute CSS matrix3d for corner-pin distortion
-// TL stays fixed, TR and BR get offset
-function cornerPinMatrix(w, h, trx, try_, brx, bry) {
-  // Source: (0,0) (w,0) (0,h) (w,h)
-  // Dest:   (0,0) (w+trx, try_) (0,h) (w+brx, h+bry)
-  const x0=0, y0=0;
-  const x1=w+trx, y1=try_;
-  const x2=0, y2=h;
-  const x3=w+brx, y3=h+bry;
-
-  // Solve perspective transform from unit square to quad
-  const dx1 = x1 - x3, dx2 = x2 - x3, dx3 = x0 - x1 + x3 - x2;
-  const dy1 = y1 - y3, dy2 = y2 - y3, dy3 = y0 - y1 + y3 - y2;
-  const det = dx1 * dy2 - dx2 * dy1;
-  if (Math.abs(det) < 1e-10) return "none";
-  const g = (dx3 * dy2 - dx2 * dy3) / det;
-  const h_ = (dx1 * dy3 - dx3 * dy1) / det;
-  const a = x1 - x0 + g * x1;
-  const b = x2 - x0 + h_ * x2;
-  const c = x0;
-  const d = y1 - y0 + g * y1;
-  const e = y2 - y0 + h_ * y2;
-  const f = y0;
-
-  // Map from pixel coords: divide by w,h
-  // matrix3d columns (transposed for CSS)
-  return `matrix3d(${a/w}, ${d/w}, 0, ${g/w}, ${b/h}, ${e/h}, 0, ${h_/h}, 0, 0, 1, 0, ${c}, ${f}, 0, 1)`;
-}
-
-function syncWallText() {
-  const allText = [tourDatesEl, bandMembersEl, rightWallEl].filter(Boolean);
-  allText.forEach(el => {
-    el.style.mixBlendMode = wallText.blend;
-    el.style.color = wallText.color;
-  });
-
-  if (tourDatesEl) {
-    tourDatesEl.style.left = wallText.datesLeft + "%";
-    tourDatesEl.style.top = wallText.datesTop + "%";
-    tourDatesEl.querySelector(".wall-text__heading").style.fontSize = wallText.datesFontSize + "em";
-    tourDatesEl.style.lineHeight = wallText.datesLineHeight;
-    tourDatesEl.style.fontFamily = fontOptions[wallText.datesFont];
-  }
-  if (bandMembersEl) {
-    bandMembersEl.style.left = wallText.membersLeft + "%";
-    bandMembersEl.style.top = wallText.membersTop + "%";
-    bandMembersEl.style.fontSize = wallText.membersFontSize + "em";
-    bandMembersEl.style.lineHeight = wallText.membersLineHeight;
-    bandMembersEl.style.fontFamily = fontOptions[wallText.membersFont];
-  }
-  if (rightWallEl) {
-    rightWallEl.style.left = wallText.rightLeft + "%";
-    rightWallEl.style.top = wallText.rightTop + "%";
-    rightWallEl.style.fontSize = wallText.rightFontSize + "em";
-    rightWallEl.style.lineHeight = wallText.rightLineHeight;
-    rightWallEl.style.fontFamily = fontOptions[wallText.rightFont];
-    // Corner-pin transform using matrix3d
-    // Source corners: TL(0,0) TR(w,0) BL(0,h) BR(w,h)
-    // Offset TR and BR by user values (in % of element size)
-    const el = rightWallEl;
-    const w = el.offsetWidth || 100;
-    const h = el.offsetHeight || 100;
-    const trx = wallText.rightTRx / 100 * w;
-    const try_ = wallText.rightTRy / 100 * h;
-    const brx = wallText.rightBRx / 100 * w;
-    const bry = wallText.rightBRy / 100 * h;
-    const t = cornerPinMatrix(w, h, trx, try_, brx, bry);
-    rightWallEl.style.transformOrigin = "0 0";
-    rightWallEl.style.transform = t;
-    rightWallEl.style.outline = wallText.rightDebug ? "1px solid red" : "none";
-    rightWallEl.style.background = wallText.rightDebug ? "rgba(255,0,0,0.08)" : "none";
-  }
-}
-
-const fText = pane.addFolder({ title: "Wall Text", expanded: false });
 const fontNames = Object.keys(fontOptions);
 const fontOpts = Object.fromEntries(fontNames.map(f => [f, f]));
-
-// Global
-fText.addBinding(wallText, "blend", { options: Object.fromEntries(blendModes.map(m => [m, m])), label: "Blend Mode" }).on("change", syncWallText);
-fText.addBinding(wallText, "color", { label: "Color" }).on("change", syncWallText);
-
-// Dates
-const fDates = fText.addFolder({ title: "Dates", expanded: false });
-fDates.addBinding(wallText, "datesLeft", { min: 0, max: 60, step: 0.1, label: "Left %" }).on("change", syncWallText);
-fDates.addBinding(wallText, "datesTop", { min: 20, max: 80, step: 0.1, label: "Top %" }).on("change", syncWallText);
-fDates.addBinding(wallText, "datesFontSize", { min: 0.5, max: 3.0, step: 0.1, label: "Size" }).on("change", syncWallText);
-fDates.addBinding(wallText, "datesLineHeight", { min: 0.5, max: 3.0, step: 0.05, label: "Line H" }).on("change", syncWallText);
-fDates.addBinding(wallText, "datesFont", { options: fontOpts, label: "Font" }).on("change", syncWallText);
-
-// Members
-const fMembers = fText.addFolder({ title: "Members", expanded: false });
-fMembers.addBinding(wallText, "membersLeft", { min: 40, max: 95, step: 0.1, label: "Left %" }).on("change", syncWallText);
-fMembers.addBinding(wallText, "membersTop", { min: 10, max: 70, step: 0.1, label: "Top %" }).on("change", syncWallText);
-fMembers.addBinding(wallText, "membersFontSize", { min: 0.3, max: 2.0, step: 0.05, label: "Size" }).on("change", syncWallText);
-fMembers.addBinding(wallText, "membersLineHeight", { min: 0.5, max: 3.0, step: 0.05, label: "Line H" }).on("change", syncWallText);
-fMembers.addBinding(wallText, "membersFont", { options: fontOpts, label: "Font" }).on("change", syncWallText);
-
-// Right
-const fRight = fText.addFolder({ title: "Right Wall", expanded: false });
-fRight.addBinding(wallText, "rightLeft", { min: 60, max: 98, step: 0.1, label: "Left %" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightTop", { min: 5, max: 60, step: 0.1, label: "Top %" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightFontSize", { min: 0.3, max: 2.0, step: 0.05, label: "Size" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightLineHeight", { min: 0.5, max: 3.0, step: 0.05, label: "Line H" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightFont", { options: fontOpts, label: "Font" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightTRx", { min: -80, max: 80, step: 1, label: "Top-Right X%" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightTRy", { min: -80, max: 80, step: 1, label: "Top-Right Y%" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightBRx", { min: -80, max: 80, step: 1, label: "Bot-Right X%" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightBRy", { min: -80, max: 80, step: 1, label: "Bot-Right Y%" }).on("change", syncWallText);
-fRight.addBinding(wallText, "rightDebug", { label: "Debug Box" }).on("change", syncWallText);
-
-syncWallText();
-
-// --- Organic hand-written effect ---
-// Wrap each character in a span with slight random tilt,
-// and offset each line slightly in X
-function applyHandwrittenEffect() {
-  document.querySelectorAll(".wall-text").forEach(container => {
-    // Process all text nodes inside <p>, <li>, <h2>
-    container.querySelectorAll("p, li, h2").forEach((el, lineIdx) => {
-      // Skip if already processed
-      if (el.dataset.handwritten) return;
-      el.dataset.handwritten = "1";
-
-      // Slight random X offset per line
-      const lineOffset = (Math.random() - 0.5) * 3;
-      el.style.marginLeft = lineOffset + "px";
-
-      // Wrap each text character in a span with random tilt
-      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-      const textNodes = [];
-      while (walker.nextNode()) textNodes.push(walker.currentNode);
-
-      textNodes.forEach(node => {
-        const text = node.textContent;
-        if (!text.trim()) return;
-        const frag = document.createDocumentFragment();
-        for (const ch of text) {
-          if (ch === " ") {
-            frag.appendChild(document.createTextNode(" "));
-          } else {
-            const span = document.createElement("span");
-            span.textContent = ch;
-            const rot = (Math.random() - 0.5) * 4; // ±2 degrees
-            const ty = (Math.random() - 0.5) * 1.5; // ±0.75px vertical jitter
-            span.style.display = "inline-block";
-            span.style.transform = `rotate(${rot}deg) translateY(${ty}px)`;
-            frag.appendChild(span);
-          }
-        }
-        node.parentNode.replaceChild(frag, node);
-      });
-    });
-  });
-}
-
-applyHandwrittenEffect();
 
 // --- Hotspot Layout Editor ---
 const fLayout = pane.addFolder({ title: "Layout Editor", expanded: false });
@@ -1283,7 +911,7 @@ document.addEventListener("keydown", (e) => {
 // ============================================================
 // Portal — Generated image behind the wall, mouse-following mask
 // ============================================================
-const portal = { size: 5 };
+const portal = { size: 12 };
 const portalBg = document.getElementById("portalBg");
 
 // Random portal background on each page load
@@ -1309,15 +937,10 @@ const portalImages = [
 let portalIdx = Math.floor(Math.random() * portalImages.length);
 portalBg.src = portalImages[portalIdx];
 
-let portalActive = false;
+let portalActive = true;
 
-// Ctrl to toggle portal mask
+// Arrow up/down to cycle portal images
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Control" && !portalActive) {
-    portalActive = true;
-    syncPortalMask();
-  }
-  // Arrow up/down to cycle portal images
   if (e.key === "ArrowUp") {
     e.preventDefault();
     portalIdx = (portalIdx - 1 + portalImages.length) % portalImages.length;
@@ -1330,20 +953,6 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-document.addEventListener("keyup", (e) => {
-  if (e.key === "Control") {
-    portalActive = false;
-    clearPortalMask();
-  }
-});
-
-function clearPortalMask() {
-  bgImage.style.webkitMaskImage = "none";
-  bgImage.style.maskImage = "none";
-  bgImageDusk.style.webkitMaskImage = "none";
-  bgImageDusk.style.maskImage = "none";
-}
-
 // Size portal bg to match the main image
 function syncPortalSize() {
   const { renderedW, renderedH } = getImageBounds();
@@ -1355,9 +964,8 @@ function syncPortalSize() {
 let portalMouseX = 50, portalMouseY = 50;
 
 function syncPortalMask() {
-  if (!portalActive) return;
   const r = portal.size;
-  const mask = `radial-gradient(circle ${r}vw at ${portalMouseX}% ${portalMouseY}%, transparent 0%, transparent 85%, black 100%)`;
+  const mask = `radial-gradient(circle ${r}vw at ${portalMouseX}% ${portalMouseY}%, transparent 0%, transparent 20%, black 100%)`;
   bgImage.style.webkitMaskImage = mask;
   bgImage.style.maskImage = mask;
   bgImageDusk.style.webkitMaskImage = mask;
@@ -1369,6 +977,12 @@ document.addEventListener("mousemove", (e) => {
   portalMouseX = ((e.clientX + scene.scrollLeft) / renderedW) * 100;
   portalMouseY = ((e.clientY + scene.scrollTop) / renderedH) * 100;
   if (portalActive) syncPortalMask();
+});
+
+// Click to cycle portal image
+scene.addEventListener("click", () => {
+  portalIdx = (portalIdx + 1) % portalImages.length;
+  portalBg.src = portalImages[portalIdx];
 });
 
 syncPortalSize();
@@ -1405,6 +1019,40 @@ document.querySelectorAll(".info-dot").forEach((dot) => {
     if (!wasActive) {
       dot.classList.add("active");
 
+      // Position panel based on proximity to edges
+      const panel = dot.querySelector(".info-dot__panel");
+      if (panel) {
+        const dotTop = parseFloat(dot.style.top);
+        const dotLeft = parseFloat(dot.style.left);
+        // Reset positioning
+        panel.style.bottom = "";
+        panel.style.top = "";
+        panel.style.left = "";
+        panel.style.right = "";
+        panel.style.transform = "";
+        // Flip below if dot is near top edge
+        if (dotTop < 35) {
+          panel.style.top = "calc(100% + 1.2em)";
+          panel.style.bottom = "auto";
+          panel.style.left = "50%";
+          panel.style.transform = "translateX(-50%)";
+        } else {
+          panel.style.bottom = "calc(100% + 1.2em)";
+          panel.style.top = "auto";
+          panel.style.left = "50%";
+          panel.style.transform = "translateX(-50%)";
+        }
+        // Shift if near left/right edge
+        if (dotLeft < 20) {
+          panel.style.left = "0";
+          panel.style.transform = dotTop < 35 ? "none" : "none";
+        } else if (dotLeft > 80) {
+          panel.style.left = "auto";
+          panel.style.right = "0";
+          panel.style.transform = "none";
+        }
+      }
+
       // Scroll to center this dot in the viewport
       const { renderedW, renderedH } = getImageBounds();
       const vw = window.innerWidth;
@@ -1428,7 +1076,7 @@ const hotspotStyles = {
   style: "dot",
   navFont: "Analo Grotesk", navFontSize: 0.95, navTransform: "uppercase",
   navTextColor: "#ffab41", navBgColor: "#4e4e4e", navBgOpacity: 0.0,
-  panelFont: "System", panelHeadingFont: "System",
+  panelFont: "Analo Grotesk", panelHeadingFont: "Analo Grotesk",
 };
 const styleOptions = {
   "Dot (minimal)": "dot",
