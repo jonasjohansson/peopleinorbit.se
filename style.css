@@ -48,8 +48,8 @@
   padding: 0;
   max-width: 100vw;
   background: var(--nav-bg);
-  backdrop-filter: blur(var(--nav-blur));
-  -webkit-backdrop-filter: blur(var(--nav-blur));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-radius: 0 0 var(--nav-radius) var(--nav-radius);
   border: 1px solid var(--nav-border);
   border-top: none;
