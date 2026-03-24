@@ -916,23 +916,36 @@ const portalBg = document.getElementById("portalBg");
 
 // Random portal background on each page load
 const portalImages = [
-  "assets/portal-2.png",
-  "assets/portal-3.png",
-  "assets/portal-5.png",
-  "assets/portal-6.png",
-  "assets/portal-23.png",
-  "assets/portal-25.png",
-  "assets/portal-27.png",
-  "assets/portal-28.png",
-  "assets/portal-30.png",
-  "assets/portal-31.png",
-  "assets/portal-32.png",
-  "assets/portal-34.png",
-  "assets/portal-35.png",
-  "assets/portal-36.png",
-  "assets/portal-39.png",
-  "assets/portal-40.png",
-  "assets/portal-41.png",
+  "assets/portal-1.jpg",
+  "assets/portal-2.jpg",
+  "assets/portal-3.jpg",
+  "assets/portal-4.jpg",
+  "assets/portal-5.jpg",
+  "assets/portal-6.jpg",
+  "assets/portal-7.jpg",
+  "assets/portal-8.jpg",
+  "assets/portal-9.jpg",
+  "assets/portal-10.jpg",
+  "assets/portal-11.jpg",
+  "assets/portal-12.jpg",
+  "assets/portal-13.jpg",
+  "assets/portal-14.jpg",
+  "assets/portal-15.jpg",
+  "assets/portal-16.jpg",
+  "assets/portal-17.jpg",
+  "assets/portal-18.jpg",
+  "assets/portal-19.jpg",
+  "assets/portal-20.jpg",
+  "assets/portal-21.jpg",
+  "assets/portal-22.jpg",
+  "assets/portal-23.jpg",
+  "assets/portal-24.jpg",
+  "assets/portal-25.jpg",
+  "assets/portal-26.jpg",
+  "assets/portal-27.jpg",
+  "assets/portal-28.jpg",
+  "assets/portal-29.jpg",
+  "assets/portal-30.jpg",
 ];
 let portalIdx = Math.floor(Math.random() * portalImages.length);
 portalBg.src = portalImages[portalIdx];
@@ -1168,16 +1181,25 @@ function navigateTo(target) {
   const scrollX = Math.max(0, Math.min(targetX - vw / 2, renderedW - vw));
   const scrollY = Math.max(0, Math.min(targetY - vh / 2, renderedH - vh));
 
-  scene.scrollTo({ left: scrollX, top: scrollY, behavior: "smooth" });
+  // Check if scroll is actually needed
+  const needsScroll = Math.abs(scene.scrollLeft - scrollX) > 5 || Math.abs(scene.scrollTop - scrollY) > 5;
 
-  // Open the corresponding info dot if it has one
+  if (needsScroll) {
+    scene.scrollTo({ left: scrollX, top: scrollY, behavior: "smooth" });
+  }
+
+  // Open the corresponding info dot
   if (t.dot) {
-    // Small delay so scroll starts first
-    setTimeout(() => {
+    const openDot = () => {
       document.querySelectorAll(".info-dot.active").forEach((d) => d.classList.remove("active"));
       const dotEl = document.getElementById(t.dot);
       if (dotEl) dotEl.click();
-    }, 400);
+    };
+    if (needsScroll) {
+      setTimeout(openDot, 400);
+    } else {
+      openDot();
+    }
   }
 
   // Highlight active nav button
