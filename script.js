@@ -995,12 +995,13 @@ fPortal.addBinding(portal, "size", { min: 2, max: 30, step: 0.1, label: "Size (v
 // IKEA-style Info Dots
 // ============================================================
 const infoDots = {
-  band:    { left: 56.8, top: 28.8, el: document.getElementById("infoBand") },
+  band:    { left: 53.2, top: 38.4, el: document.getElementById("infoBand") },
   contact: { left: 22, top: 35.5, el: document.getElementById("infoContact") },
   vinyl:     { left: 78.3, top: 51.5, el: document.getElementById("infoVinyl") },
   closeaway: { left: 82.6, top: 68.5, el: document.getElementById("infoCloseAway") },
   listen:    { left: 54.5, top: 68, el: document.getElementById("infoListen") },
   watch:   { left: 28.8, top: 66.6, el: document.getElementById("infoWatch") },
+  poster:  { left: 89.1, top: 31.1, el: document.getElementById("infoPoster") },
 };
 
 function syncInfoDots() {
@@ -1175,7 +1176,7 @@ function navigateTo(target) {
     setTimeout(() => {
       document.querySelectorAll(".info-dot.active").forEach((d) => d.classList.remove("active"));
       const dotEl = document.getElementById(t.dot);
-      if (dotEl) dotEl.classList.add("active");
+      if (dotEl) dotEl.click();
     }, 400);
   }
 

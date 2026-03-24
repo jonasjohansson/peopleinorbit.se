@@ -797,6 +797,23 @@ body {
   transform: scale(1.3);
 }
 
+.info-dot__badge {
+  position: absolute;
+  left: calc(100% + 0.3em);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.55em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: #e85d4a;
+  padding: 0.15em 0.4em;
+  border-radius: 0.3em;
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1;
+}
+
 .info-dot__panel {
   position: absolute;
   bottom: calc(100% + 1.2em);
