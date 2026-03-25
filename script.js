@@ -821,12 +821,6 @@ function stopPlaying() {
 
 // --- Vinyl click: start Spotify and scroll to TV ---
 
-// --- Lamp: crossfade to dusk photo ---
-lampBtn.addEventListener("click", () => {
-  if (editMode) return;
-  isDark = !isDark;
-  bgImageDusk.classList.toggle("active", isDark);
-});
 
 // --- TV Static ---
 function drawStatic() {
