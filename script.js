@@ -26,7 +26,6 @@ const YOUTUBE_VIDEO_ID = "GH_SJYrT8EM";
 // --- State ---
 let isPlaying = false;
 let isDark = false;
-let noteInterval = null;
 
 // --- Elements ---
 const bgImage = document.getElementById("bgImage");
@@ -34,7 +33,6 @@ const bgImageDusk = document.getElementById("bgImageDusk");
 const hotspotLayer = document.getElementById("hotspotLayer");
 const fxCanvas = document.getElementById("fxCanvas");
 const turntableBtn = document.getElementById("turntableBtn");
-const musicNotes = document.getElementById("musicNotes");
 const tvBtn = document.getElementById("tvBtn");
 const tvStatic = document.getElementById("tvStatic");
 const staticCanvas = document.getElementById("staticCanvas");
@@ -204,22 +202,17 @@ function getImageBounds() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const viewRatio = vw / vh;
-  let renderedW, renderedH, offsetX, offsetY;
+  let renderedW, renderedH;
 
   if (viewRatio > IMG_RATIO) {
-    // Viewport wider — image width-fitted, overflows vertically
     renderedW = vw;
     renderedH = vw / IMG_RATIO;
   } else {
-    // Viewport taller — image height-fitted, overflows horizontally
     renderedH = vh;
     renderedW = vh * IMG_RATIO;
   }
 
-  // No negative offsets — image starts at 0,0, container scrolls
-  offsetX = 0;
-  offsetY = 0;
-  return { renderedW, renderedH, offsetX, offsetY };
+  return { renderedW, renderedH };
 }
 
 function syncLayout() {
@@ -474,7 +467,7 @@ fLed.addBinding(led, "top", { min: 80, max: 98, step: 0.1, label: "TV Top %" }).
 fLed.addBinding(led, "size", { min: 2, max: 12, step: 0.1, label: "TV Size px" }).on("change", syncLed);
 
 // --- Hifi LED Position ---
-const hifi = { top: 83.6, left: 57.5, size: 10.0 };
+const hifi = { top: 83.5, left: 57.4, size: 5.5 };
 const hifiLedEl = document.getElementById("hifiLed");
 
 function syncHifiLed() {
@@ -812,8 +805,6 @@ turntableBtn.addEventListener("click", () => {
     currentAlbumIndex = 0;
     setTVMode("spotify");
     turntableBtn.classList.add("playing");
-    speakerLeft.classList.add("pulsing");
-    speakerRight.classList.add("pulsing");
     document.getElementById("hifiLed").classList.add("on");
   } else {
     currentAlbumIndex = (currentAlbumIndex + 1) % SPOTIFY_ALBUMS.length;
@@ -825,23 +816,21 @@ function stopPlaying() {
   isPlaying = false;
   setTVMode("youtube");
   turntableBtn.classList.remove("playing");
-  speakerLeft.classList.remove("pulsing");
-  speakerRight.classList.remove("pulsing");
   document.getElementById("hifiLed").classList.remove("on");
 }
 
 // --- Vinyl click: start Spotify and scroll to TV ---
 document.getElementById("vinylBtn").addEventListener("click", () => {
   if (editMode) return;
-  if (!isPlaying) {
-    isPlaying = true;
-    currentAlbumIndex = 0;
-    setTVMode("spotify");
-    turntableBtn.classList.add("playing");
-    speakerLeft.classList.add("pulsing");
-    speakerRight.classList.add("pulsing");
-    document.getElementById("hifiLed").classList.add("on");
+  if (isPlaying) {
+    stopPlaying();
+    return;
   }
+  isPlaying = true;
+  currentAlbumIndex = 0;
+  setTVMode("spotify");
+  turntableBtn.classList.add("playing");
+  document.getElementById("hifiLed").classList.add("on");
   const tv = hotspots.tv;
   const { renderedW, renderedH } = getImageBounds();
   const vw = window.innerWidth;
@@ -852,20 +841,6 @@ document.getElementById("vinylBtn").addEventListener("click", () => {
   const scrollY = Math.max(0, Math.min(targetY - vh / 2, renderedH - vh));
   scene.scrollTo({ left: scrollX, top: scrollY, behavior: "smooth" });
 });
-
-// --- Music Notes ---
-const noteChars = ["♪", "♫", "♩", "♬"];
-function spawnNote() {
-  const note = document.createElement("span");
-  note.className = "music-note";
-  note.textContent = noteChars[Math.floor(Math.random() * noteChars.length)];
-  note.style.left = Math.random() * 80 + 10 + "%";
-  note.style.setProperty("--drift", (Math.random() - 0.5) * 40 + "px");
-  note.style.setProperty("--rotate", (Math.random() - 0.5) * 60 + "deg");
-  note.style.animationDelay = Math.random() * 0.3 + "s";
-  musicNotes.appendChild(note);
-  note.addEventListener("animationend", () => note.remove());
-}
 
 // --- Lamp: crossfade to dusk photo ---
 lampBtn.addEventListener("click", () => {
@@ -973,8 +948,6 @@ const portalImages = [
 let portalIdx = Math.floor(Math.random() * portalImages.length);
 portalBg.src = portalImages[portalIdx];
 
-let portalActive = false;
-
 // Arrow up/down to cycle portal images
 document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp") {
@@ -989,41 +962,13 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Size portal bg to match the main image
-function syncPortalSize() {
-  const { renderedW, renderedH } = getImageBounds();
-}
-
-// Mouse-following circular mask
-let portalMouseX = 50, portalMouseY = 50;
-
-function syncPortalMask() {
-  const r = portal.size;
-  const mask = `radial-gradient(circle ${r}vw at ${portalMouseX}% ${portalMouseY}%, transparent 0%, transparent 20%, black 100%)`;
-  bgImage.style.webkitMaskImage = mask;
-  bgImage.style.maskImage = mask;
-  bgImageDusk.style.webkitMaskImage = mask;
-  bgImageDusk.style.maskImage = mask;
-}
-
-document.addEventListener("mousemove", (e) => {
-  const { renderedW, renderedH } = getImageBounds();
-  portalMouseX = ((e.clientX + scene.scrollLeft) / renderedW) * 100;
-  portalMouseY = ((e.clientY + scene.scrollTop) / renderedH) * 100;
-  if (portalActive) syncPortalMask();
-});
-
 // Click to cycle portal image
 scene.addEventListener("click", () => {
   portalIdx = (portalIdx + 1) % portalImages.length;
   portalBg.src = portalImages[portalIdx];
 });
 
-syncPortalSize();
-window.addEventListener("resize", () => { syncPortalSize(); syncPortalMask(); });
-
 const fPortal = pane.addFolder({ title: "Portal", expanded: false });
-fPortal.addBinding(portal, "size", { min: 2, max: 30, step: 0.1, label: "Size (vw)" }).on("change", syncPortalMask);
 
 // ============================================================
 // IKEA-style Info Dots
@@ -1085,7 +1030,7 @@ document.querySelectorAll(".info-dot").forEach((dot) => {
         // Shift if near left/right edge
         if (dotLeft < 20) {
           panel.style.left = "0";
-          panel.style.transform = dotTop < 35 ? "none" : "none";
+          panel.style.transform = "none";
         } else if (dotLeft > 80) {
           panel.style.left = "auto";
           panel.style.right = "0";

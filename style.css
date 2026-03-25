@@ -470,57 +470,6 @@ body {
 .speaker--right {
 }
 
-.speaker.pulsing {
-  opacity: 1;
-  animation: speakerPulse 0.8s ease-in-out infinite alternate;
-}
-
-@keyframes speakerPulse {
-  0% {
-    box-shadow: 0 0 10px 2px rgba(255, 180, 100, 0.15);
-  }
-  100% {
-    box-shadow: 0 0 25px 8px rgba(255, 180, 100, 0.3);
-  }
-}
-
-/* Music notes floating up from turntable */
-.music-notes {
-  position: absolute;
-  left: 48%;
-  top: 50%;
-  width: 18%;
-  height: 14%;
-  pointer-events: none;
-}
-
-.music-note {
-  position: absolute;
-  bottom: 0;
-  font-size: 1.2rem;
-  opacity: 0;
-  animation: floatNote 2.5s ease-out forwards;
-  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
-}
-
-@keyframes floatNote {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.5);
-  }
-  15% {
-    opacity: 1;
-    transform: translateY(-10px) scale(1);
-  }
-  85% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-80px) translateX(var(--drift)) scale(0.6) rotate(var(--rotate));
-  }
-}
-
 
 /* Wall text — typography overlaid on the image */
 .wall-text {
