@@ -820,27 +820,6 @@ function stopPlaying() {
 }
 
 // --- Vinyl click: start Spotify and scroll to TV ---
-document.getElementById("vinylBtn").addEventListener("click", () => {
-  if (editMode) return;
-  if (isPlaying) {
-    stopPlaying();
-    return;
-  }
-  isPlaying = true;
-  currentAlbumIndex = 0;
-  setTVMode("spotify");
-  turntableBtn.classList.add("playing");
-  document.getElementById("hifiLed").classList.add("on");
-  const tv = hotspots.tv;
-  const { renderedW, renderedH } = getImageBounds();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const targetX = ((tv.left + tv.width / 2) / 100) * renderedW;
-  const targetY = ((tv.top + tv.height / 2) / 100) * renderedH;
-  const scrollX = Math.max(0, Math.min(targetX - vw / 2, renderedW - vw));
-  const scrollY = Math.max(0, Math.min(targetY - vh / 2, renderedH - vh));
-  scene.scrollTo({ left: scrollX, top: scrollY, behavior: "smooth" });
-});
 
 // --- Lamp: crossfade to dusk photo ---
 lampBtn.addEventListener("click", () => {
