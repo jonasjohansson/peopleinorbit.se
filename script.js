@@ -1,5 +1,13 @@
 import { Pane } from "https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js";
 
+// --- Preload: fade in when main image is ready ---
+const bgImg = document.getElementById("bgImage");
+if (bgImg.complete) {
+  document.body.classList.remove("loading");
+} else {
+  bgImg.addEventListener("load", () => document.body.classList.remove("loading"));
+}
+
 // --- Constants ---
 const IMG_W = 6144;
 const IMG_H = 4098;
@@ -919,7 +927,6 @@ const portalImages = [
   "assets/portal-30.jpg",
 ];
 let portalIdx = Math.floor(Math.random() * portalImages.length);
-portalBg.src = portalImages[portalIdx];
 
 // Arrow up/down to cycle portal images
 document.addEventListener("keydown", (e) => {

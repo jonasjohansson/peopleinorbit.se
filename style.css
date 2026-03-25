@@ -107,6 +107,16 @@
   }
 }
 
+body.loading .scene,
+body.loading .floating-nav {
+  opacity: 0;
+}
+
+.scene,
+.floating-nav {
+  transition: opacity 0.8s ease;
+}
+
 html,
 body {
   height: 100%;
