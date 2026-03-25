@@ -49,8 +49,8 @@ const fx = {
   tintR: 1.0,
   tintG: 0.95,
   tintB: 0.9,
-  brightness: 1.0,
-  contrast: 1.0,
+  brightness: 1.24,
+  contrast: 1.11,
   saturation: 1.0,
 };
 
