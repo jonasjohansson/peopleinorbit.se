@@ -567,7 +567,7 @@ body {
 
 .info-dot__circle {
   position: relative;
-  transition: none;
+  transition: transform 0.15s ease-out;
 }
 
 /* Larger invisible hit area */

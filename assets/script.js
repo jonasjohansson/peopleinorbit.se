@@ -697,6 +697,32 @@ document.addEventListener("click", () => {
   document.querySelectorAll(".floating-nav button.active").forEach((b) => b.classList.remove("active"));
 });
 
+// --- Proximity scaling for info-dot circles ---
+{
+  const dots = document.querySelectorAll(".info-dot__circle");
+  const PROXIMITY = 200; // px radius of influence
+  const MIN_SCALE = 1;
+  const MAX_SCALE = 2;
+
+  scene.addEventListener("mousemove", (e) => {
+    const mx = e.clientX + scene.scrollLeft;
+    const my = e.clientY + scene.scrollTop;
+    dots.forEach(dot => {
+      const rect = dot.getBoundingClientRect();
+      const dx = (rect.left + rect.width / 2) - e.clientX;
+      const dy = (rect.top + rect.height / 2) - e.clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const t = Math.max(0, 1 - dist / PROXIMITY);
+      const scale = MIN_SCALE + t * (MAX_SCALE - MIN_SCALE);
+      dot.style.transform = `scale(${scale})`;
+    });
+  }, { passive: true });
+
+  scene.addEventListener("mouseleave", () => {
+    dots.forEach(dot => { dot.style.transform = ""; });
+  }, { passive: true });
+}
+
 // --- Dagblock Calendar ---
 {
   const WEEKDAYS = ["Söndag", "Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag"];
