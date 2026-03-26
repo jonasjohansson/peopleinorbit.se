@@ -15,7 +15,9 @@
       "mcp__google-docs__listFolderContents",
       "mcp__google-docs__clearRange",
       "mcp__google-docs__appendRows",
-      "mcp__google-docs__createSpreadsheet"
+      "mcp__google-docs__createSpreadsheet",
+      "mcp__airtable__create_record",
+      "mcp__airtable__delete_records"
     ]
   }
 }

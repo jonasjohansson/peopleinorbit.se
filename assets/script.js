@@ -9,10 +9,10 @@ if (bgImg.complete) {
 // --- Load settings ---
 let settings;
 try {
-  const resp = await fetch("settings.json");
+  const resp = await fetch("assets/settings.json");
   settings = await resp.json();
 } catch (e) {
-  console.error("Failed to load settings.json", e);
+  console.error("Failed to load assets/settings.json", e);
 }
 
 const IMG_W = settings.image.width;
