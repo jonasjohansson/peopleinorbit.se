@@ -40,7 +40,7 @@
     "listen":    { "left": 54.5, "top": 68.0 },
     "watch":     { "left": 28.8, "top": 66.6 },
     "poster":    { "left": 89.1, "top": 31.1 },
-    "calendar":  { "left": 43.5, "top": 57.5 }
+    "calendar":  { "left": 42.5, "top": 57.5 }
   },
   "style": {
     "hotspotStyle": "dot",

@@ -754,6 +754,7 @@ body {
 .info-dot.active .info-dot__panel {
   opacity: 1;
   pointer-events: auto;
+  z-index: 30;
 }
 
 .info-dot__panel h3 {
@@ -827,9 +828,9 @@ body {
 .dagblock {
   width: 5em;
   height: 5.2em;
-  background: #f0ebe3;
+  background: #ede5db;
   border-radius: 0;
-  box-shadow: 0.1em 0.15em 0.4em rgba(0, 0, 0, 0.3);
+  box-shadow: 0.2em 0.1em 0.4em rgba(0, 0, 0, 0.25);
   opacity: 0.88;
   overflow: hidden;
   display: flex;
@@ -843,21 +844,21 @@ body {
   position: relative;
 }
 
-.dagblock::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 0.7em;
-  height: 0.7em;
-  background: linear-gradient(
-    225deg,
-    transparent 0.25em,
-    #e4ded5 0.25em,
-    #d8d2c8 0.35em,
-    #f0ebe3 0.35em
-  );
-  box-shadow: -0.05em -0.05em 0.15em rgba(0, 0, 0, 0.06);
+.dagblock__venue,
+.dagblock__city,
+.dagblock__date,
+.dagblock__month,
+.dagblock__shows {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.dagblock.loaded .dagblock__venue,
+.dagblock.loaded .dagblock__city,
+.dagblock.loaded .dagblock__date,
+.dagblock.loaded .dagblock__month,
+.dagblock.loaded .dagblock__shows {
+  opacity: 1;
 }
 
 .dagblock::after {

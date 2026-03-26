@@ -608,10 +608,7 @@ document.addEventListener("click", () => {
   const WEEKDAYS = ["Söndag", "Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag"];
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const now = new Date();
-  document.getElementById("dagblockVenue").textContent = "";
-  document.getElementById("dagblockCity").textContent = "";
-  document.getElementById("dagblockDate").textContent = now.getDate();
-  document.getElementById("dagblockMonth").textContent = MONTHS[now.getMonth()];
+  const dagblock = document.getElementById("dagblock");
 
   const SHOWS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKRkSWU4Yg1fgLpOqVd2TGIq8WKroPXFbxF-UuOvuExiC5a2gr_qtN8C0uwSW7f5_Z3ivAWi05IHpL/pub?output=csv";
   const showsList = document.getElementById("showsList");
@@ -651,8 +648,7 @@ document.addEventListener("click", () => {
         document.getElementById("dagblockCity").textContent = next.city + ", " + next.country;
         document.getElementById("dagblockDate").textContent = nd.getDate();
         document.getElementById("dagblockMonth").textContent = MONTHS[nd.getMonth()];
-        const dagblockShows = document.getElementById("dagblockShows");
-        if (dagblockShows) dagblockShows.textContent = "";
+        dagblock.classList.add("loaded");
       }
     })
     .catch(() => {
