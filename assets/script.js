@@ -725,7 +725,6 @@ document.addEventListener("click", () => {
 
 // --- Dagblock Calendar ---
 {
-  const WEEKDAYS = ["Söndag", "Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag"];
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const now = new Date();
   const dagblock = document.getElementById("dagblock");
