@@ -568,24 +568,31 @@ document.querySelectorAll(".info-dot").forEach((dot) => {
           panel.style.left = "50%";
           panel.style.transform = "translateX(-50%)";
         }
-        if (dotLeft < 20) {
-          panel.style.left = "0";
-          panel.style.transform = "none";
-        } else if (dotLeft > 80) {
-          panel.style.left = "auto";
-          panel.style.right = "0";
-          panel.style.transform = "none";
-        }
+        // Always keep panel horizontally centered on the dot
       }
 
-      const { renderedW, renderedH } = getImageBounds();
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const dotLeftPx = parseFloat(dot.style.left) / 100 * renderedW;
-      const dotTopPx = parseFloat(dot.style.top) / 100 * renderedH;
-      const scrollX = Math.max(0, Math.min(dotLeftPx - vw / 2, renderedW - vw));
-      const scrollY = Math.max(0, Math.min(dotTopPx - vh / 2, renderedH - vh));
-      scene.scrollTo({ left: scrollX, top: scrollY, behavior: "smooth" });
+      // Scroll to center the dot+panel combo after panel renders
+      requestAnimationFrame(() => {
+        const { renderedW, renderedH } = getImageBounds();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const dotLeftPx = parseFloat(dot.style.left) / 100 * renderedW;
+        const dotTopPx = parseFloat(dot.style.top) / 100 * renderedH;
+        let centerY = dotTopPx;
+        if (panel) {
+          const panelRect = panel.getBoundingClientRect();
+          const dotRect = dot.getBoundingClientRect();
+          // Find the midpoint of the combined dot+panel area in viewport, then map to scroll coords
+          const comboTop = Math.min(dotRect.top, panelRect.top);
+          const comboBottom = Math.max(dotRect.bottom, panelRect.bottom);
+          const comboMidViewport = (comboTop + comboBottom) / 2;
+          // Convert viewport midpoint to document position
+          centerY = comboMidViewport + scene.scrollTop;
+        }
+        const scrollX = Math.max(0, Math.min(dotLeftPx - vw / 2, renderedW - vw));
+        const scrollY = Math.max(0, Math.min(centerY - vh / 2, renderedH - vh));
+        scene.scrollTo({ left: scrollX, top: scrollY, behavior: "smooth" });
+      });
     }
   });
 });
@@ -605,8 +612,18 @@ function navigateTo(target) {
   const vh = window.innerHeight;
   const targetX = (t.left / 100) * renderedW;
   const targetY = (t.top / 100) * renderedH;
+  // Offset scroll to center the panel area, not the hotspot
+  let panelOffsetY = 0;
+  if (t.dot) {
+    const dotEl = document.getElementById(t.dot);
+    if (dotEl) {
+      const panel = dotEl.querySelector(".info-dot__panel");
+      const panelH = (panel && panel.offsetHeight) || 120;
+      panelOffsetY = t.top < 35 ? panelH / 2 : -(panelH / 2);
+    }
+  }
   const scrollX = Math.max(0, Math.min(targetX - vw / 2, renderedW - vw));
-  const scrollY = Math.max(0, Math.min(targetY - vh / 2, renderedH - vh));
+  const scrollY = Math.max(0, Math.min(targetY + panelOffsetY - vh / 2, renderedH - vh));
   const needsScroll = Math.abs(scene.scrollLeft - scrollX) > 5 || Math.abs(scene.scrollTop - scrollY) > 5;
 
   if (needsScroll) scene.scrollTo({ left: scrollX, top: scrollY, behavior: "smooth" });

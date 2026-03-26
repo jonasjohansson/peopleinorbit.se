@@ -13,7 +13,7 @@
   --panel-border: rgba(0, 0, 0, 0.12);
   --panel-padding: 0.8em 1em;
   --panel-radius: 0.25em;
-  --panel-font-size: 0.85em;
+  --panel-font-size: 0.75em;
   --panel-line-height: 1.5;
   --panel-max-width: 26em;
 }
@@ -99,7 +99,7 @@
     --nav-letter-spacing: 0;
   }
   .info-dot__panel {
-    font-size: 14px;
+    font-size: 12px;
   }
 }
 
