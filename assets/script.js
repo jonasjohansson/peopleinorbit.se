@@ -15,6 +15,96 @@ try {
   console.error("Failed to load assets/settings.json", e);
 }
 
+// --- Load site data from Google Sheets ---
+const SITE_DATA_CSV = "https://docs.google.com/spreadsheets/d/1t_MW0nj9XppnHZIj_YpbAEAPGzIZh6C0H8ZbfR9VeUo/gviz/tq?tqx=out:csv&gid=74332928";
+
+function parseCSVRow(row) {
+  const cols = [];
+  let cur = "", inQuotes = false;
+  for (let i = 0; i < row.length; i++) {
+    const ch = row[i];
+    if (inQuotes) {
+      if (ch === '"' && row[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') inQuotes = false;
+      else cur += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ',') { cols.push(cur); cur = ""; }
+      else cur += ch;
+    }
+  }
+  cols.push(cur);
+  return cols;
+}
+
+function buildPanelHTML(row, headers) {
+  const get = (key) => row[headers.indexOf(key)] || "";
+  let html = "";
+  const badge = get("badge");
+  if (badge) {
+    const dot = document.getElementById(get("elementId"));
+    if (dot) {
+      const existing = dot.querySelector(".info-dot__badge");
+      if (!existing) {
+        const span = document.createElement("span");
+        span.className = "info-dot__badge";
+        span.textContent = badge;
+        dot.insertBefore(span, dot.querySelector(".info-dot__panel"));
+      }
+    }
+  }
+  const title = get("title");
+  if (title) html += `<h3>${title}</h3>`;
+  const desc = get("description");
+  if (desc) html += `<p class="desc">${desc}</p>`;
+  const members = get("members");
+  if (members) {
+    html += '<div class="members">';
+    members.split("\n").forEach(m => { if (m.trim()) html += `<p>${m.trim()}</p>`; });
+    html += '</div>';
+  }
+  const links = get("links");
+  if (links) {
+    const linkStyle = get("link_style");
+    const groups = links.split("---");
+    groups.forEach(group => {
+      const cls = linkStyle === "grid" ? "links links--grid" : "links";
+      html += `<div class="${cls}">`;
+      group.split("\n").forEach(l => {
+        const parts = l.trim().split("|");
+        if (parts.length >= 2) {
+          const label = parts[0];
+          const url = parts.slice(1).join("|");
+          const isMailto = url.startsWith("mailto:");
+          html += `<a href="${url}"${isMailto ? "" : ' target="_blank" rel="noopener"'}>${label}</a>`;
+        }
+      });
+      html += '</div>';
+    });
+  }
+  return html;
+}
+
+try {
+  const csvResp = await fetch(SITE_DATA_CSV);
+  const csvText = await csvResp.text();
+  const lines = csvText.trim().split("\n");
+  const headers = parseCSVRow(lines[0]);
+  for (let i = 1; i < lines.length; i++) {
+    const row = parseCSVRow(lines[i]);
+    const elId = row[headers.indexOf("elementId")];
+    if (!elId) continue;
+    const panel = document.querySelector(`#${elId} .info-dot__panel`);
+    if (panel) panel.innerHTML = buildPanelHTML(row, headers);
+  }
+  // Re-attach click stopPropagation on panels
+  document.querySelectorAll(".info-dot__panel").forEach(p => {
+    p.addEventListener("click", e => e.stopPropagation());
+  });
+} catch (e) {
+  console.error("Failed to load site data", e);
+}
+
 const IMG_W = settings.image.width;
 const IMG_H = settings.image.height;
 const IMG_RATIO = IMG_W / IMG_H;
